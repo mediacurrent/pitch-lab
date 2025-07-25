@@ -22,12 +22,12 @@ interface ImageVotingProps {
 }
 
 export function ImageVoting({ images = [] }: ImageVotingProps) {
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [currentPairIndex, setCurrentPairIndex] = useState(0);
   const [timeRemaining, setTimeRemaining] = useState(TIME_LIMIT);
   const [votes, setVotes] = useState<VoteResult[]>([]);
   const [isComplete, setIsComplete] = useState(false);
   const [hasVoted, setHasVoted] = useState(false);
-  const [selectedVote, setSelectedVote] = useState<'yes' | 'no' | null>(null);
+  const [selectedVote, setSelectedVote] = useState<'left' | 'right' | null>(null);
   const [isPaused, setIsPaused] = useState(false);
 
   // Use CMS images if available, otherwise fall back to sample images
@@ -51,8 +51,19 @@ export function ImageVoting({ images = [] }: ImageVotingProps) {
     tags: []
   }));
 
-  const currentImage = availableImages[currentImageIndex];
-  const isLastImage = currentImageIndex === availableImages.length - 1;
+  // Create pairs of images for side-by-side voting
+  const imagePairs = [];
+  for (let i = 0; i < availableImages.length; i += 2) {
+    if (i + 1 < availableImages.length) {
+      imagePairs.push([availableImages[i], availableImages[i + 1]]);
+    } else {
+      // If odd number of images, last image gets paired with itself
+      imagePairs.push([availableImages[i], availableImages[i]]);
+    }
+  }
+
+  const currentPair = imagePairs[currentPairIndex];
+  const isLastPair = currentPairIndex === imagePairs.length - 1;
 
   // Timer effect
   useEffect(() => {
@@ -64,13 +75,13 @@ export function ImageVoting({ images = [] }: ImageVotingProps) {
           // Time's up - record as timeout and move to next
           if (!hasVoted) {
             setVotes(prevVotes => [...prevVotes, {
-              imageId: currentImage.id,
-              imageUrl: currentImage.imageUrl,
-              title: currentImage.title,
+              imageId: currentPair[0].id,
+              imageUrl: currentPair[0].imageUrl,
+              title: currentPair[0].title,
               vote: 'timeout'
             }]);
           }
-          nextImage();
+          nextPair();
           return TIME_LIMIT;
         }
         return prev - 1;
@@ -78,31 +89,32 @@ export function ImageVoting({ images = [] }: ImageVotingProps) {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [currentImageIndex, isComplete, hasVoted, currentImage, isPaused]);
+  }, [currentPairIndex, isComplete, hasVoted, currentPair, isPaused]);
 
-  const handleVote = (vote: 'yes' | 'no') => {
+  const handleVote = (vote: 'left' | 'right') => {
     if (hasVoted) return;
     
+    const selectedImage = currentPair[vote === 'left' ? 0 : 1];
     setVotes(prevVotes => [...prevVotes, {
-      imageId: currentImage.id,
-      imageUrl: currentImage.imageUrl,
-      title: currentImage.title,
-      vote
+      imageId: selectedImage.id,
+      imageUrl: selectedImage.imageUrl,
+      title: selectedImage.title,
+      vote: vote === 'left' ? 'yes' : 'no' // Map to yes/no for compatibility
     }]);
     setHasVoted(true);
     setSelectedVote(vote);
     
-    // Brief delay before moving to next image
+    // Brief delay before moving to next pair
     setTimeout(() => {
-      nextImage();
+      nextPair();
     }, 500);
   };
 
-  const nextImage = () => {
-    if (isLastImage) {
+  const nextPair = () => {
+    if (isLastPair) {
       setIsComplete(true);
     } else {
-      setCurrentImageIndex(prev => prev + 1);
+      setCurrentPairIndex(prev => prev + 1);
       setTimeRemaining(TIME_LIMIT);
       setHasVoted(false);
       setSelectedVote(null);
@@ -110,7 +122,7 @@ export function ImageVoting({ images = [] }: ImageVotingProps) {
   };
 
   const resetGame = () => {
-    setCurrentImageIndex(0);
+    setCurrentPairIndex(0);
     setTimeRemaining(TIME_LIMIT);
     setVotes([]);
     setIsComplete(false);
@@ -164,49 +176,69 @@ export function ImageVoting({ images = [] }: ImageVotingProps) {
         {/* Top header with slide counter and circular timer */}
         <div className="absolute top-4 left-4 right-4 flex justify-between items-center px-[8px] py-[0px]">
           <span className="text-sm text-muted-foreground text-[24px]">
-            {currentImageIndex + 1} / {availableImages.length}
+            {currentPairIndex + 1} / {imagePairs.length}
           </span>
           <CircularTimer timeRemaining={timeRemaining} totalTime={TIME_LIMIT} isPaused={isPaused} />
         </div>
         
         {/* Main content with padding to account for header */}
         <div className="pt-12">
-          <div className="mb-6 flex justify-center">
-            <ImageWithFallback 
-              src={currentImage.imageUrl}
-              alt={currentImage.title || `Image ${currentImageIndex + 1}`}
-              className="w-full max-w-sm aspect-square object-cover rounded-[0px] mx-[0px] my-[16px]"
-            />
-          </div>
-          
-          {currentImage.title && (
-            <div className="text-center mb-4">
-              <h3 className="text-lg font-medium">{currentImage.title}</h3>
-              {currentImage.description && (
-                <p className="text-sm text-muted-foreground mt-1">{currentImage.description}</p>
+          {/* Two images side by side, stacked on mobile */}
+          <div className="mb-6 flex flex-col md:flex-row gap-4 justify-center">
+            {/* Left Image */}
+            <div className="flex-1 flex flex-col items-center">
+              <ImageWithFallback 
+                src={currentPair[0].imageUrl}
+                alt={currentPair[0].title || `Image ${currentPairIndex * 2 + 1}`}
+                className="w-full max-w-sm aspect-square object-cover rounded-[0px] mx-[0px] my-[16px]"
+              />
+              {currentPair[0].title && (
+                <div className="text-center mb-2">
+                  <h3 className="text-lg font-medium">{currentPair[0].title}</h3>
+                  {currentPair[0].description && (
+                    <p className="text-sm text-muted-foreground mt-1">{currentPair[0].description}</p>
+                  )}
+                </div>
               )}
             </div>
-          )}
+            
+            {/* Right Image */}
+            <div className="flex-1 flex flex-col items-center">
+              <ImageWithFallback 
+                src={currentPair[1].imageUrl}
+                alt={currentPair[1].title || `Image ${currentPairIndex * 2 + 2}`}
+                className="w-full max-w-sm aspect-square object-cover rounded-[0px] mx-[0px] my-[16px]"
+              />
+              {currentPair[1].title && (
+                <div className="text-center mb-2">
+                  <h3 className="text-lg font-medium">{currentPair[1].title}</h3>
+                  {currentPair[1].description && (
+                    <p className="text-sm text-muted-foreground mt-1">{currentPair[1].description}</p>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
           
           <div className="flex gap-4 justify-center px-[8px] py-[0px]">
             <Button 
-              onClick={() => handleVote('no')}
+              onClick={() => handleVote('left')}
               variant="destructive"
               disabled={hasVoted || isPaused}
               className={`px-8 py-3 transition-opacity duration-300 ${
-                hasVoted && selectedVote === 'no' ? 'opacity-50' : ''
+                hasVoted && selectedVote === 'left' ? 'opacity-50' : ''
               }`}
             >
-              No
+              Left
             </Button>
             <Button 
-              onClick={() => handleVote('yes')}
+              onClick={() => handleVote('right')}
               disabled={hasVoted || isPaused}
               className={`px-8 py-3 transition-opacity duration-300 ${
-                hasVoted && selectedVote === 'yes' ? 'opacity-50' : ''
+                hasVoted && selectedVote === 'right' ? 'opacity-50' : ''
               }`}
             >
-              Yes
+              Right
             </Button>
           </div>
         </div>
