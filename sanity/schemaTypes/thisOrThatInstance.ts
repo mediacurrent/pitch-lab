@@ -74,7 +74,7 @@ export default defineType({
                   description: 'Accessibility description',
                 },
               ],
-              validation: (Rule) => Rule.custom((fields) => {
+              validation: (Rule) => Rule.custom((fields: any) => {
                 if (!fields?.asset && !fields?.externalUrl) {
                   return 'Either an image asset or external URL is required'
                 }
@@ -107,7 +107,7 @@ export default defineType({
                   description: 'Accessibility description',
                 },
               ],
-              validation: (Rule) => Rule.custom((fields) => {
+              validation: (Rule) => Rule.custom((fields: any) => {
                 if (!fields?.asset && !fields?.externalUrl) {
                   return 'Either an image asset or external URL is required'
                 }
