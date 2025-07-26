@@ -200,6 +200,17 @@ export function ImageVoting({ images = [] }: ImageVotingProps) {
                   )}
                 </div>
               )}
+              {/* This button centered under left image */}
+              <Button 
+                onClick={() => handleVote('left')}
+                variant="destructive"
+                disabled={hasVoted || isPaused}
+                className={`px-8 py-3 transition-opacity duration-300 ${
+                  hasVoted && selectedVote === 'left' ? 'opacity-50' : ''
+                }`}
+              >
+                This
+              </Button>
             </div>
             
             {/* Right Image */}
@@ -217,29 +228,17 @@ export function ImageVoting({ images = [] }: ImageVotingProps) {
                   )}
                 </div>
               )}
+              {/* That button centered under right image */}
+              <Button 
+                onClick={() => handleVote('right')}
+                disabled={hasVoted || isPaused}
+                className={`px-8 py-3 transition-opacity duration-300 ${
+                  hasVoted && selectedVote === 'right' ? 'opacity-50' : ''
+                }`}
+              >
+                That
+              </Button>
             </div>
-          </div>
-          
-          <div className="flex gap-4 justify-center px-[8px] py-[0px]">
-            <Button 
-              onClick={() => handleVote('left')}
-              variant="destructive"
-              disabled={hasVoted || isPaused}
-              className={`px-8 py-3 transition-opacity duration-300 ${
-                hasVoted && selectedVote === 'left' ? 'opacity-50' : ''
-              }`}
-            >
-              Left
-            </Button>
-            <Button 
-              onClick={() => handleVote('right')}
-              disabled={hasVoted || isPaused}
-              className={`px-8 py-3 transition-opacity duration-300 ${
-                hasVoted && selectedVote === 'right' ? 'opacity-50' : ''
-              }`}
-            >
-              Right
-            </Button>
           </div>
         </div>
         
