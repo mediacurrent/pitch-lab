@@ -31,7 +31,7 @@ export default defineConfig({
     // Custom actions for documents
     actions: (input, context) => {
       // Only show delete action for draft documents
-      if (context.schemaType === 'imageVoting') {
+      if (context.schemaType === 'imageOption') {
         return input.filter(({action}) => action !== 'delete')
       }
       return input

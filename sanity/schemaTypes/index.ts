@@ -1,5 +1,4 @@
-import imageVoting from './imageVoting'
+import imageOption from './imageVoting'
 import category from './category'
-import votingSession from './votingSession'
 
-export const schemaTypes = [imageVoting, category, votingSession]
+export const schemaTypes = [imageOption, category]

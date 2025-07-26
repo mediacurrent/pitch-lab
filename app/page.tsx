@@ -6,6 +6,8 @@ export default async function Home() {
   let images: ImageEntry[] = []
   try {
     images = await getAllImages()
+    console.log('Fetched images from Sanity:', images.length)
+    console.log('Image titles:', images.map(img => img.title))
   } catch (error) {
     console.log('Sanity not configured, using sample images')
   }

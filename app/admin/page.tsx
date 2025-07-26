@@ -1,4 +1,4 @@
-import { getAllImages, getFeaturedImages, getCategories, type ImageEntry } from '@/lib/sanity'
+import { getAllImages, getCategories, type ImageEntry } from '@/lib/sanity'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -6,13 +6,11 @@ import { Plus, Edit, Trash2, ExternalLink, Star, Filter, BarChart3 } from 'lucid
 import Link from 'next/link'
 
 export default async function AdminPage() {
-  let images: ImageEntry[] = []
-  let featuredImages: ImageEntry[] = []
+    let images: ImageEntry[] = []
   let categories: any[] = []
-  
+
   try {
     images = await getAllImages()
-    featuredImages = await getFeaturedImages()
     categories = await getCategories()
   } catch (error) {
     console.log('Sanity not configured')
@@ -55,17 +53,7 @@ export default async function AdminPage() {
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Featured Images</p>
-                <p className="text-2xl font-bold">{featuredImages.length}</p>
-              </div>
-              <Star className="h-8 w-8 text-muted-foreground" />
-            </div>
-          </CardContent>
-        </Card>
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -96,18 +84,11 @@ export default async function AdminPage() {
           <Card key={image.id} className="overflow-hidden">
             <div className="aspect-square relative">
               <img
-                src={image.imageUrl}
+                src={image.imageUrl1}
                 alt={image.title}
                 className="w-full h-full object-cover"
               />
-              {image.featured && (
-                <div className="absolute top-2 right-2">
-                  <Badge className="bg-yellow-500 text-white">
-                    <Star className="w-3 h-3 mr-1" />
-                    Featured
-                  </Badge>
-                </div>
-              )}
+
               {image.status && (
                 <div className="absolute top-2 left-2">
                   <Badge variant={image.status === 'active' ? 'default' : 'secondary'}>
@@ -118,28 +99,15 @@ export default async function AdminPage() {
             </div>
             <CardHeader>
               <CardTitle className="text-lg">{image.title}</CardTitle>
-              {image.description && (
-                <CardDescription>{image.description}</CardDescription>
-              )}
+
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2 mb-4">
                 {image.category && (
-                  <Badge variant="secondary">{image.category}</Badge>
+                  <Badge variant="secondary">{image.category.name}</Badge>
                 )}
-                {image.difficulty && (
-                  <Badge variant="outline" className={
-                    image.difficulty === 'easy' ? 'text-green-600' :
-                    image.difficulty === 'hard' ? 'text-red-600' : 'text-yellow-600'
-                  }>
-                    {image.difficulty}
-                  </Badge>
-                )}
-                {image.tags?.map((tag: string) => (
-                  <Badge key={tag} variant="outline">
-                    {tag}
-                  </Badge>
-                ))}
+
+
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" className="flex-1">

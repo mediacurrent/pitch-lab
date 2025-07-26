@@ -1,8 +1,8 @@
 import { defineField, defineType } from 'sanity'
 
 export default defineType({
-  name: 'imageVoting',
-  title: 'Image Voting',
+  name: 'imageOption',
+  title: 'Image Option',
   type: 'document',
   fields: [
     defineField({
@@ -12,15 +12,8 @@ export default defineType({
       validation: (Rule) => Rule.required().min(1).max(100),
     }),
     defineField({
-      name: 'description',
-      title: 'Description',
-      type: 'text',
-      rows: 3,
-      validation: (Rule) => Rule.max(500),
-    }),
-    defineField({
-      name: 'image',
-      title: 'Image',
+      name: 'image1',
+      title: 'Image This',
       type: 'image',
       options: {
         hotspot: true,
@@ -29,35 +22,22 @@ export default defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
-      name: 'category',
-      title: 'Category',
-      type: 'string',
+      name: 'image2',
+      title: 'Image That',
+      type: 'image',
       options: {
-        list: [
-          { title: 'Nature', value: 'nature' },
-          { title: 'Architecture', value: 'architecture' },
-          { title: 'Food', value: 'food' },
-          { title: 'Travel', value: 'travel' },
-          { title: 'Art', value: 'art' },
-          { title: 'Technology', value: 'technology' },
-          { title: 'People', value: 'people' },
-          { title: 'Animals', value: 'animals' },
-          { title: 'Sports', value: 'sports' },
-          { title: 'Other', value: 'other' },
-        ],
+        hotspot: true,
+        accept: 'image/*',
       },
       validation: (Rule) => Rule.required(),
     }),
-    defineField({
-      name: 'tags',
-      title: 'Tags',
-      type: 'array',
-      of: [{ type: 'string' }],
-      options: {
-        layout: 'tags',
-      },
-      validation: (Rule) => Rule.max(10),
-    }),
+                defineField({
+              name: 'category',
+              title: 'Category',
+              type: 'reference',
+              to: [{ type: 'category' }],
+              validation: (Rule) => Rule.required(),
+            }),
     defineField({
       name: 'status',
       title: 'Status',
@@ -73,36 +53,22 @@ export default defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
-      name: 'featured',
-      title: 'Featured',
-      type: 'boolean',
-      description: 'Mark this image as featured for special display',
-      initialValue: false,
-    }),
-    defineField({
-      name: 'difficulty',
-      title: 'Voting Difficulty',
-      type: 'string',
-      description: 'How challenging this image might be to vote on',
-      options: {
-        list: [
-          { title: 'Easy', value: 'easy' },
-          { title: 'Medium', value: 'medium' },
-          { title: 'Hard', value: 'hard' },
-        ],
-      },
-      initialValue: 'medium',
-    }),
-    defineField({
       name: 'metadata',
       title: 'Image Metadata',
       type: 'object',
       fields: [
         {
-          name: 'altText',
-          title: 'Alt Text',
+          name: 'altText1',
+          title: 'Alt Text for Image This',
           type: 'string',
-          description: 'Accessibility description for the image',
+          description: 'Accessibility description for the "This" image',
+          validation: (Rule) => Rule.max(200),
+        },
+        {
+          name: 'altText2',
+          title: 'Alt Text for Image That',
+          type: 'string',
+          description: 'Accessibility description for the "That" image',
           validation: (Rule) => Rule.max(200),
         },
         {
@@ -115,7 +81,7 @@ export default defineType({
           name: 'location',
           title: 'Location',
           type: 'string',
-          description: 'Where the image was taken',
+          description: 'Where the images were taken',
         },
       ],
     }),
@@ -123,17 +89,15 @@ export default defineType({
   preview: {
     select: {
       title: 'title',
-      media: 'image',
+      media: 'image1',
       category: 'category',
       status: 'status',
-      featured: 'featured',
     },
     prepare(selection) {
-      const { title, media, category, status, featured } = selection
+      const { title, media, category, status } = selection
       const statusEmoji = status === 'active' ? '✅' : status === 'draft' ? '📝' : '📦'
-      const featuredIcon = featured ? '⭐ ' : ''
       return {
-        title: `${featuredIcon}${title}`,
+        title: title,
         subtitle: `${statusEmoji} ${category || 'No category'} | ${status}`,
         media: media,
       }
@@ -149,14 +113,6 @@ export default defineType({
       title: 'Title Z-A',
       name: 'titleDesc',
       by: [{ field: 'title', direction: 'desc' }],
-    },
-    {
-      title: 'Featured First',
-      name: 'featuredFirst',
-      by: [
-        { field: 'featured', direction: 'desc' },
-        { field: 'title', direction: 'asc' },
-      ],
     },
     {
       title: 'Status',

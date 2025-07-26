@@ -29,6 +29,7 @@ export function ImageVoting({ images = [] }: ImageVotingProps) {
   const [hasVoted, setHasVoted] = useState(false);
   const [selectedVote, setSelectedVote] = useState<'left' | 'right' | null>(null);
   const [isPaused, setIsPaused] = useState(false);
+  const [isStarted, setIsStarted] = useState(false);
 
   // Use CMS images if available, otherwise fall back to sample images
   const SAMPLE_IMAGES = [
@@ -42,63 +43,59 @@ export function ImageVoting({ images = [] }: ImageVotingProps) {
     'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=600&h=600&fit=crop'
   ];
 
-  const availableImages = images.length > 0 ? images : SAMPLE_IMAGES.map((url, index) => ({
+  // Each ImageEntry from Sanity already contains a complete pair (imageUrl1 and imageUrl2)
+  // So we don't need to create pairs - each entry is already a voting pair
+  const availableImagePairs = images.length > 0 ? images : SAMPLE_IMAGES.map((url, index) => ({
     id: `sample-${index}`,
-    title: `Sample Image ${index + 1}`,
-    imageUrl: url,
-    description: '',
+    title: `Sample Pair ${index + 1}`,
+    imageUrl1: url,
+    imageUrl2: SAMPLE_IMAGES[(index + 1) % SAMPLE_IMAGES.length], // Use modulo to wrap around
     category: 'sample',
-    tags: []
+    status: 'active'
   }));
 
-  // Create pairs of images for side-by-side voting
-  const imagePairs = [];
-  for (let i = 0; i < availableImages.length; i += 2) {
-    if (i + 1 < availableImages.length) {
-      imagePairs.push([availableImages[i], availableImages[i + 1]]);
-    } else {
-      // If odd number of images, last image gets paired with itself
-      imagePairs.push([availableImages[i], availableImages[i]]);
-    }
-  }
+  const currentPair = availableImagePairs[currentPairIndex] || null;
+  const isLastPair = currentPairIndex === availableImagePairs.length - 1;
+  
 
-  const currentPair = imagePairs[currentPairIndex];
-  const isLastPair = currentPairIndex === imagePairs.length - 1;
+
+
+
+
 
   // Timer effect
   useEffect(() => {
-    if (isComplete || isPaused) return;
+    if (isComplete || isPaused || !isStarted) return;
 
     const timer = setInterval(() => {
       setTimeRemaining((prev) => {
-        if (prev <= 1) {
+        if (prev <= 0.1) {
           // Time's up - record as timeout and move to next
           if (!hasVoted) {
-            setVotes(prevVotes => [...prevVotes, {
-              imageId: currentPair[0].id,
-              imageUrl: currentPair[0].imageUrl,
-              title: currentPair[0].title,
-              vote: 'timeout'
-            }]);
+                    setVotes(prevVotes => [...prevVotes, {
+          imageId: currentPair.id,
+          imageUrl: currentPair.imageUrl1,
+          title: currentPair.title,
+          vote: 'timeout'
+        }]);
           }
           nextPair();
           return TIME_LIMIT;
         }
-        return prev - 1;
+        return prev - 0.1;
       });
-    }, 1000);
+    }, 100);
 
     return () => clearInterval(timer);
-  }, [currentPairIndex, isComplete, hasVoted, currentPair, isPaused]);
+  }, [currentPairIndex, isComplete, hasVoted, currentPair, isPaused, isStarted]);
 
   const handleVote = (vote: 'left' | 'right') => {
     if (hasVoted) return;
     
-    const selectedImage = currentPair[vote === 'left' ? 0 : 1];
     setVotes(prevVotes => [...prevVotes, {
-      imageId: selectedImage.id,
-      imageUrl: selectedImage.imageUrl,
-      title: selectedImage.title,
+      imageId: currentPair.id,
+      imageUrl: vote === 'left' ? currentPair.imageUrl1 : currentPair.imageUrl2,
+      title: currentPair.title,
       vote: vote === 'left' ? 'yes' : 'no' // Map to yes/no for compatibility
     }]);
     setHasVoted(true);
@@ -118,6 +115,8 @@ export function ImageVoting({ images = [] }: ImageVotingProps) {
       setTimeRemaining(TIME_LIMIT);
       setHasVoted(false);
       setSelectedVote(null);
+      // Auto-start timer on subsequent slides (not the first slide)
+      setIsStarted(true);
     }
   };
 
@@ -129,6 +128,8 @@ export function ImageVoting({ images = [] }: ImageVotingProps) {
     setHasVoted(false);
     setSelectedVote(null);
     setIsPaused(false);
+    // Reset to manual start for first slide
+    setIsStarted(false);
   };
 
   const togglePause = () => {
@@ -138,6 +139,20 @@ export function ImageVoting({ images = [] }: ImageVotingProps) {
   const yesVotes = votes.filter(v => v.vote === 'yes').length;
   const noVotes = votes.filter(v => v.vote === 'no').length;
   const timeoutVotes = votes.filter(v => v.vote === 'timeout').length;
+
+  // Handle case where no images are available
+  if (!currentPair || !currentPair.imageUrl1 || !currentPair.imageUrl2) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen py-4 px-6">
+        <Card className="p-8 max-w-md w-full text-center">
+          <h1 className="mb-6">No Images Available</h1>
+          <p className="text-muted-foreground">
+            Please add some images to your CMS to start voting.
+          </p>
+        </Card>
+      </div>
+    );
+  }
 
   if (isComplete) {
     return (
@@ -170,42 +185,111 @@ export function ImageVoting({ images = [] }: ImageVotingProps) {
     );
   }
 
+  // Show loading or error state if no pairs available
+  if (!currentPair) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen py-4 px-6">
+        <Card className="p-6 max-w-[1280px] w-full relative rounded-[0px] border-0">
+          <div className="text-center">
+            <h2 className="text-lg font-medium text-foreground">No image pairs available</h2>
+            <p className="text-muted-foreground">Please add some image options to your CMS.</p>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-4 px-6">
-      <Card className="p-6 max-w-2xl w-full relative rounded-[0px]">
-        {/* Top header with slide counter and circular timer */}
+      <Card className="p-6 max-w-[1280px] w-full relative rounded-[0px] border-0">
+        {/* Top header with slide counter and title */}
         <div className="absolute top-4 left-4 right-4 flex justify-between items-center px-[8px] py-[0px]">
-          <span className="text-sm text-muted-foreground text-[24px]">
-            {currentPairIndex + 1} / {imagePairs.length}
-          </span>
-          <CircularTimer timeRemaining={timeRemaining} totalTime={TIME_LIMIT} isPaused={isPaused} />
+          <div className="flex items-center gap-4">
+                                 <span className="text-sm text-muted-foreground text-[24px]">
+                       {currentPairIndex + 1} / {availableImagePairs.length}
+                     </span>
+            {currentPair.title && (
+              <h2 className="text-lg font-medium text-foreground">
+                {currentPair.title}
+              </h2>
+            )}
+          </div>
+        </div>
+        
+        {/* Centered timer and start button */}
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-4">
+          <CircularTimer timeRemaining={timeRemaining} totalTime={TIME_LIMIT} isPaused={isPaused} isStarted={isStarted} />
+          
+          {!isStarted && (
+            <Button
+              onClick={() => setIsStarted(true)}
+              variant="outline"
+              size="sm"
+              className="px-6 h-10 rounded-[0.25rem] uppercase font-light"
+            >
+              Start
+            </Button>
+          )}
+        </div>
+        
+        {/* Control buttons in top right */}
+        <div className="absolute top-4 right-4 flex flex-col gap-4">
+          <Button
+            onClick={resetGame}
+            variant="outline"
+            size="sm"
+            className="w-10 h-10 p-0 rounded-[0.25rem]"
+          >
+            <RotateCcw className="w-4 h-4" />
+          </Button>
+          
+          <Button
+            onClick={togglePause}
+            variant="outline"
+            size="sm"
+            className="w-10 h-10 p-0 rounded-[0.25rem]"
+          >
+            {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+          </Button>
         </div>
         
         {/* Main content with padding to account for header */}
         <div className="pt-12">
           {/* Two images side by side, stacked on mobile */}
-          <div className="mb-6 flex flex-col md:flex-row gap-4 justify-center">
+          <div className="flex flex-col md:flex-row gap-4 justify-center">
             {/* Left Image */}
-            <div className="flex-1 flex flex-col items-center">
-              <ImageWithFallback 
-                src={currentPair[0].imageUrl}
-                alt={currentPair[0].title || `Image ${currentPairIndex * 2 + 1}`}
-                className="w-full max-w-sm aspect-square object-cover rounded-[0px] mx-[0px] my-[16px]"
-              />
-              {currentPair[0].title && (
-                <div className="text-center mb-2">
-                  <h3 className="text-lg font-medium">{currentPair[0].title}</h3>
-                  {currentPair[0].description && (
-                    <p className="text-sm text-muted-foreground mt-1">{currentPair[0].description}</p>
-                  )}
-                </div>
-              )}
-              {/* This button centered under left image */}
+            <div className="flex-1 flex flex-col items-center min-h-96">
+              <div className="flex-1 flex items-center justify-center">
+                <ImageWithFallback
+                  src={currentPair.imageUrl1}
+                  alt={currentPair.title || `Image This`}
+                  className="w-full max-w-sm max-h-96 object-contain rounded-[0px] mx-[0px] my-[16px]"
+                />
+              </div>
+            </div>
+            
+            {/* Right Image */}
+            <div className="flex-1 flex flex-col items-center min-h-96">
+              <div className="flex-1 flex items-center justify-center">
+                <ImageWithFallback
+                  src={currentPair.imageUrl2}
+                  alt={currentPair.title || `Image That`}
+                  className="w-full max-w-sm max-h-96 object-contain rounded-[0px] mx-[0px] my-[16px]"
+                />
+              </div>
+            </div>
+          </div>
+          
+                    {/* Voting buttons */}
+          <div className="flex flex-col md:flex-row gap-4 justify-center mt-8">
+            {/* This button */}
+            <div className="flex-1 flex justify-center">
               <Button 
                 onClick={() => handleVote('left')}
-                variant="destructive"
-                disabled={hasVoted || isPaused}
-                className={`px-8 py-3 transition-opacity duration-300 ${
+                disabled={hasVoted || isPaused || !isStarted}
+                variant="outline"
+                size="sm"
+                className={`px-8 h-10 transition-opacity duration-300 bg-black text-white hover:bg-gray-800 rounded-[0.25rem] uppercase font-light ${
                   hasVoted && selectedVote === 'left' ? 'opacity-50' : ''
                 }`}
               >
@@ -213,26 +297,14 @@ export function ImageVoting({ images = [] }: ImageVotingProps) {
               </Button>
             </div>
             
-            {/* Right Image */}
-            <div className="flex-1 flex flex-col items-center">
-              <ImageWithFallback 
-                src={currentPair[1].imageUrl}
-                alt={currentPair[1].title || `Image ${currentPairIndex * 2 + 2}`}
-                className="w-full max-w-sm aspect-square object-cover rounded-[0px] mx-[0px] my-[16px]"
-              />
-              {currentPair[1].title && (
-                <div className="text-center mb-2">
-                  <h3 className="text-lg font-medium">{currentPair[1].title}</h3>
-                  {currentPair[1].description && (
-                    <p className="text-sm text-muted-foreground mt-1">{currentPair[1].description}</p>
-                  )}
-                </div>
-              )}
-              {/* That button centered under right image */}
+            {/* That button */}
+            <div className="flex-1 flex justify-center">
               <Button 
                 onClick={() => handleVote('right')}
-                disabled={hasVoted || isPaused}
-                className={`px-8 py-3 transition-opacity duration-300 ${
+                disabled={hasVoted || isPaused || !isStarted}
+                variant="outline"
+                size="sm"
+                className={`px-8 h-10 transition-opacity duration-300 border-black text-black hover:bg-gray-100 rounded-[0.25rem] uppercase font-light ${
                   hasVoted && selectedVote === 'right' ? 'opacity-50' : ''
                 }`}
               >
@@ -242,29 +314,7 @@ export function ImageVoting({ images = [] }: ImageVotingProps) {
           </div>
         </div>
         
-        {/* Reset button in lower left */}
-        <div className="absolute bottom-4 left-4">
-          <Button
-            onClick={resetGame}
-            variant="outline"
-            size="sm"
-            className="w-10 h-10 p-0 rounded-[0px]"
-          >
-            <RotateCcw className="w-4 h-4" />
-          </Button>
-        </div>
-        
-        {/* Pause button in lower right */}
-        <div className="absolute bottom-4 right-4">
-          <Button
-            onClick={togglePause}
-            variant="outline"
-            size="sm"
-            className="w-10 h-10 p-0 rounded-[0px]"
-          >
-            {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
-          </Button>
-        </div>
+
       </Card>
     </div>
   );
