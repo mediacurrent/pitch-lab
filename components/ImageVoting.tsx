@@ -196,7 +196,7 @@ export function ImageVoting({
   if (!currentPair) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen py-4 px-6">
-        <Card className="p-6 max-w-[1280px] w-full relative rounded-[0px] border-0">
+        <Card className="px-6 py-20 max-w-[1280px] w-full relative rounded-[0.25rem] border-0 bg-gray-200">
           <div className="text-center">
             <h2 className="text-lg font-medium text-foreground">No image pairs available</h2>
             <p className="text-muted-foreground">Please add some image options to your CMS.</p>
@@ -208,19 +208,14 @@ export function ImageVoting({
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-4 px-6">
-      <Card className="p-6 max-w-[1280px] w-full relative rounded-[0px] border-0">
+      <Card className="px-6 py-20 max-w-[1280px] w-full relative rounded-[0.25rem] border-0 bg-gray-200">
         {/* Top header with slide counter and title */}
-        <div className="absolute top-4 left-4 right-4 flex justify-between items-center px-[8px] py-[0px]">
+        <div className="absolute top-6 left-4 right-4 flex justify-between items-center px-[8px] py-[0px]">
           <div className="flex items-center gap-4">
                                  <span className="text-sm text-muted-foreground text-[24px]">
                        {currentPairIndex + 1} / {availableImagePairs.length}
                      </span>
-            {instanceTitle && (
-              <h2 className="text-lg font-medium text-foreground">
-                {instanceTitle}
-              </h2>
-            )}
-            {currentPair.title && !instanceTitle && (
+            {currentPair.title && (
               <h2 className="text-lg font-medium text-foreground">
                 {currentPair.title}
               </h2>
@@ -237,7 +232,7 @@ export function ImageVoting({
               onClick={() => setIsStarted(true)}
               variant="outline"
               size="sm"
-              className="px-6 h-10 rounded-[0.25rem] uppercase font-light"
+              className="px-6 h-10 rounded-[0.25rem] uppercase font-light hover:bg-black hover:text-white transition-colors duration-300"
             >
               Start
             </Button>
@@ -245,12 +240,12 @@ export function ImageVoting({
         </div>
         
         {/* Control buttons in top right */}
-        <div className="absolute top-4 right-4 flex flex-col gap-4">
+        <div className="absolute top-6 right-4 flex flex-col gap-4">
           <Button
             onClick={resetGame}
             variant="outline"
             size="sm"
-            className="w-10 h-10 p-0 rounded-[0.25rem]"
+            className="w-10 h-10 p-0 rounded-[0.25rem] hover:bg-black hover:text-white transition-colors duration-300"
           >
             <RotateCcw className="w-4 h-4" />
           </Button>
@@ -259,7 +254,7 @@ export function ImageVoting({
             onClick={togglePause}
             variant="outline"
             size="sm"
-            className="w-10 h-10 p-0 rounded-[0.25rem]"
+            className="w-10 h-10 p-0 rounded-[0.25rem] hover:bg-black hover:text-white transition-colors duration-300"
           >
             {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
           </Button>
@@ -269,59 +264,50 @@ export function ImageVoting({
         <div className="pt-12">
           {/* Two images side by side, stacked on mobile */}
           <div className="flex flex-col md:flex-row gap-4 justify-center">
-            {/* Left Image */}
+            {/* Left Image - Clickable */}
             <div className="flex-1 flex flex-col items-center min-h-96">
-              <div className="flex-1 flex items-center justify-center">
-                <ImageWithFallback
-                  src={currentPair.imageUrl1}
-                  alt={currentPair.title || `Image This`}
-                  className="w-full max-w-sm max-h-96 object-contain rounded-[0px] mx-[0px] my-[16px]"
-                />
+              <div className="text-center mb-4">
+                <span className="text-lg font-medium text-foreground">This</span>
               </div>
-            </div>
-            
-            {/* Right Image */}
-            <div className="flex-1 flex flex-col items-center min-h-96">
-              <div className="flex-1 flex items-center justify-center">
-                <ImageWithFallback
-                  src={currentPair.imageUrl2}
-                  alt={currentPair.title || `Image That`}
-                  className="w-full max-w-sm max-h-96 object-contain rounded-[0px] mx-[0px] my-[16px]"
-                />
-              </div>
-            </div>
-          </div>
-          
-                    {/* Voting buttons */}
-          <div className="flex flex-col md:flex-row gap-4 justify-center mt-8">
-            {/* This button */}
-            <div className="flex-1 flex justify-center">
-              <Button 
-                onClick={() => handleVote('left')}
-                disabled={hasVoted || isPaused || !isStarted}
-                variant="outline"
-                size="sm"
-                className={`px-8 h-10 transition-opacity duration-300 bg-black text-white hover:bg-gray-800 rounded-[0.25rem] uppercase font-light ${
+              <div 
+                className={`flex-1 flex items-center justify-center cursor-pointer transition-all duration-300 ${
+                  hasVoted || isPaused || !isStarted ? 'pointer-events-none' : ''
+                }`}
+                onClick={() => !hasVoted && !isPaused && isStarted && handleVote('left')}
+              >
+                <div className={`relative border-2 border-transparent hover:border-blue-500 rounded-lg p-2 transition-all duration-300 hover:opacity-80 ${
                   hasVoted && selectedVote === 'left' ? 'opacity-50' : ''
-                }`}
-              >
-                This
-              </Button>
+                }`}>
+                  <ImageWithFallback
+                    src={currentPair.imageUrl1}
+                    alt={currentPair.title || `Image This`}
+                    className="w-full max-w-sm max-h-96 object-contain rounded-[0px]"
+                  />
+                </div>
+              </div>
             </div>
             
-            {/* That button */}
-            <div className="flex-1 flex justify-center">
-              <Button 
-                onClick={() => handleVote('right')}
-                disabled={hasVoted || isPaused || !isStarted}
-                variant="outline"
-                size="sm"
-                className={`px-8 h-10 transition-opacity duration-300 border-black text-black hover:bg-gray-100 rounded-[0.25rem] uppercase font-light ${
-                  hasVoted && selectedVote === 'right' ? 'opacity-50' : ''
+            {/* Right Image - Clickable */}
+            <div className="flex-1 flex flex-col items-center min-h-96">
+              <div className="text-center mb-4">
+                <span className="text-lg font-medium text-foreground">That</span>
+              </div>
+              <div 
+                className={`flex-1 flex items-center justify-center cursor-pointer transition-all duration-300 ${
+                  hasVoted || isPaused || !isStarted ? 'pointer-events-none' : ''
                 }`}
+                onClick={() => !hasVoted && !isPaused && isStarted && handleVote('right')}
               >
-                That
-              </Button>
+                <div className={`relative border-2 border-transparent hover:border-blue-500 rounded-lg p-2 transition-all duration-300 hover:opacity-80 ${
+                  hasVoted && selectedVote === 'right' ? 'opacity-50' : ''
+                }`}>
+                  <ImageWithFallback
+                    src={currentPair.imageUrl2}
+                    alt={currentPair.title || `Image That`}
+                    className="w-full max-w-sm max-h-96 object-contain rounded-[0px]"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
