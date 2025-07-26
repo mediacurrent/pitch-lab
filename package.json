@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "setup": "node scripts/setup.js",
+    "seed": "node scripts/seed-data.js",
     "studio": "sanity dev",
     "studio:build": "sanity build"
   },

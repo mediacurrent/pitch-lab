@@ -22,4 +22,14 @@ export default defineConfig({
     // https://www.sanity.io/docs/the-vision-plugin
     visionTool({defaultApiVersion: apiVersion}),
   ],
+  document: {
+    // Custom actions for documents
+    actions: (input, context) => {
+      // Only show delete action for draft documents
+      if (context.schemaType === 'imageVoting') {
+        return input.filter(({action}) => action !== 'delete' || context.document?.status === 'draft')
+      }
+      return input
+    },
+  },
 })
