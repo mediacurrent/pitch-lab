@@ -5,19 +5,24 @@
  */
 
 import {visionTool} from '@sanity/vision'
+import {structureTool} from 'sanity/structure'
 import {defineConfig} from 'sanity'
 
 // Go to https://www.sanity.io/docs/api-versioning to learn how API versioning works
 import {apiVersion, dataset, projectId} from './sanity/env'
-import {schema} from './sanity/schemaTypes'
+import {schemaTypes} from './sanity/schemaTypes'
 
 export default defineConfig({
   basePath: '/studio',
   projectId,
   dataset,
   // Add and edit the content schema in the './sanity/schemaTypes' folder
-  schema,
+  schema: {
+    types: schemaTypes,
+  },
   plugins: [
+    // Structure tool is the main content management interface
+    structureTool(),
     // Vision is for querying with GROQ from inside the Studio
     // https://www.sanity.io/docs/the-vision-plugin
     visionTool({defaultApiVersion: apiVersion}),
@@ -27,7 +32,7 @@ export default defineConfig({
     actions: (input, context) => {
       // Only show delete action for draft documents
       if (context.schemaType === 'imageVoting') {
-        return input.filter(({action}) => action !== 'delete' || context.document?.status === 'draft')
+        return input.filter(({action}) => action !== 'delete')
       }
       return input
     },
