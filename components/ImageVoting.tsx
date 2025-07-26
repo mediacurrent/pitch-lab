@@ -15,13 +15,20 @@ interface VoteResult {
   vote: 'yes' | 'no' | 'timeout';
 }
 
-const TIME_LIMIT = 10; // seconds
-
 interface ImageVotingProps {
   images?: ImageEntry[];
+  timerLength?: number;
+  instanceTitle?: string;
+  instanceDescription?: string;
 }
 
-export function ImageVoting({ images = [] }: ImageVotingProps) {
+export function ImageVoting({ 
+  images = [], 
+  timerLength = 10,
+  instanceTitle,
+  instanceDescription 
+}: ImageVotingProps) {
+  const TIME_LIMIT = timerLength; // Use the instance's timer length
   const [currentPairIndex, setCurrentPairIndex] = useState(0);
   const [timeRemaining, setTimeRemaining] = useState(TIME_LIMIT);
   const [votes, setVotes] = useState<VoteResult[]>([]);
@@ -208,7 +215,12 @@ export function ImageVoting({ images = [] }: ImageVotingProps) {
                                  <span className="text-sm text-muted-foreground text-[24px]">
                        {currentPairIndex + 1} / {availableImagePairs.length}
                      </span>
-            {currentPair.title && (
+            {instanceTitle && (
+              <h2 className="text-lg font-medium text-foreground">
+                {instanceTitle}
+              </h2>
+            )}
+            {currentPair.title && !instanceTitle && (
               <h2 className="text-lg font-medium text-foreground">
                 {currentPair.title}
               </h2>

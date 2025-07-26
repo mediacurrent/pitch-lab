@@ -1,4 +1,3 @@
-import imageOption from './imageVoting'
-import category from './category'
+import thisOrThatInstance from './thisOrThatInstance'
 
-export const schemaTypes = [imageOption, category]
+export const schemaTypes = [thisOrThatInstance]
