@@ -1,24 +1,26 @@
-# Image Voting App
+# This or That - Image Voting App
 
-A modern image voting application built with Next.js 14 and Contentful CMS for managing images.
+A modern multi-tenant image voting application built with Next.js 14 and Sanity CMS. Users can create "This or That" voting instances with custom images and timer settings.
 
 ## Features
 
-- 🖼️ **Image Voting System**: Vote on images with a timer
-- 📱 **Responsive Design**: Works on desktop and mobile devices
-- ⏱️ **Timer Functionality**: Configurable voting time limits
-- 🎯 **CMS Integration**: Manage images through Sanity
+- 🎯 **Multi-Tenant Instances**: Create multiple "This or That" voting sessions
+- 🖼️ **Image Pair Voting**: Vote between two images with clickable interface
+- ⏱️ **Configurable Timers**: Set timer length from 5-30 seconds per instance
+- 📱 **Responsive Design**: Works seamlessly on desktop and mobile devices
 - 🎨 **Modern UI**: Built with Tailwind CSS and Radix UI components
-- 📊 **Vote Tracking**: Track yes/no votes and timeouts
-- ⏸️ **Pause/Resume**: Pause voting sessions
-- 🔄 **Reset Functionality**: Start over with the same images
+- ⏸️ **Pause/Resume**: Pause voting sessions at any time
+- 🔄 **Reset Functionality**: Start over with the same image pairs
+- 🚀 **Manual Start**: Users control when to start the timer
+- 📊 **Vote Tracking**: Track selections and timeouts
+- 🔗 **URL Sharing**: Each instance has a unique shareable URL
 
 ## Tech Stack
 
 - **Frontend**: Next.js 14 with App Router
 - **Styling**: Tailwind CSS
 - **UI Components**: Radix UI + shadcn/ui
-- **CMS**: Sanity
+- **CMS**: Sanity Studio
 - **Language**: TypeScript
 - **Icons**: Lucide React
 
@@ -42,14 +44,19 @@ npm install
 
 1. Create a [Sanity account](https://www.sanity.io/)
 2. Create a new project
-3. The schema is already configured in `sanity/schemas/imageVoting.ts` with the following fields:
-   - `title` (string, required)
-   - `description` (text, optional)
-   - `image` (image, required)
-   - `category` (string, optional)
-   - `tags` (array of strings, optional)
+3. The schema is configured in `sanity/schemaTypes/thisOrThatInstance.ts` with:
+   - `title` (string, required) - Instance name
+   - `slug` (string, required) - URL identifier
+   - `description` (text, optional) - Instance description
+   - `timerLength` (number, 5-30s, default 10) - Voting timer duration
+   - `imagePairs` (array) - Embedded image pairs with:
+     - `title` (string, required) - Pair name
+     - `image1` & `image2` (objects) - Image assets or external URLs
+     - `order` (number) - Display order
+   - `isActive` (boolean) - Instance availability
+   - `createdBy` (string) - CMS user who created the instance
 
-4. Add some sample images to your Sanity project
+4. Add image pairs to your Sanity project
 
 ### 3. Environment Variables
 
@@ -64,11 +71,6 @@ NEXT_PUBLIC_SANITY_DATASET=production
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
-To find your Sanity project ID:
-1. Go to your Sanity project dashboard
-2. Copy the Project ID from the project settings
-3. The dataset is typically "production" by default
-
 ### 4. Run the Development Server
 
 ```bash
@@ -80,56 +82,87 @@ Open [http://localhost:3000](http://localhost:3000) to view the app.
 ## Project Structure
 
 ```
-├── app/                    # Next.js App Router
-│   ├── admin/             # Admin pages for CMS management
-│   ├── globals.css        # Global styles
-│   ├── layout.tsx         # Root layout
-│   └── page.tsx           # Home page
-├── components/            # React components
-│   ├── ui/               # shadcn/ui components
-│   ├── CircularTimer.tsx # Timer component
-│   ├── ImageVoting.tsx   # Main voting component
-│   └── figma/            # Image components
-├── lib/                  # Utility functions
-│   └── sanity.ts         # CMS integration
-├── styles/               # Additional styles
-└── public/               # Static assets
+├── app/                           # Next.js App Router
+│   ├── admin/                    # Admin pages for instance management
+│   ├── this-or-that/[slug]/      # Dynamic instance pages
+│   ├── globals.css               # Global styles
+│   ├── layout.tsx                # Root layout
+│   └── page.tsx                  # Home page with instance gallery
+├── components/                   # React components
+│   ├── ui/                      # shadcn/ui components
+│   ├── CircularTimer.tsx        # Timer component
+│   ├── ImageVoting.tsx          # Main voting component
+│   └── figma/                   # Image components
+├── lib/                         # Utility functions
+│   └── sanity.ts                # CMS integration
+├── sanity/                      # Sanity configuration
+│   ├── schemaTypes/             # Content schemas
+│   └── studio/                  # Sanity Studio setup
+└── public/                      # Static assets
 ```
 
 ## Usage
 
+### Creating Instances
+
+1. Navigate to `/admin` to manage instances
+2. Click "Sanity Studio" to create new instances
+3. Add image pairs with uploaded images or external URLs
+4. Set timer length and instance details
+5. Publish the instance
+
 ### Voting Interface
 
-1. Navigate to the home page
-2. Images will be displayed one at a time
-3. Vote "Yes" or "No" within the time limit
-4. View results at the end
+1. Browse instances on the home page
+2. Click "Start Voting" on any instance
+3. View image pairs with "This" and "That" labels
+4. Click on images to vote (blue border appears on hover)
+5. Timer starts manually on first slide, auto-starts on subsequent slides
+6. Use pause/reset controls as needed
 
 ### Admin Interface
 
-1. Navigate to `/admin` to manage images
-2. View all images in your CMS
-3. Click "Sanity Studio" to edit directly in Sanity
-4. Add new images through the CMS interface
+1. Navigate to `/admin` to view all instances
+2. See instance details: title, timer length, pair count, status
+3. Access Sanity Studio for content management
+4. View and edit instance configurations
 
-### Customization
+## Key Features
 
-#### Changing Timer Duration
+### Multi-Tenant Architecture
+- Each "This or That" instance is independent
+- Unique URLs: `/this-or-that/{slug}`
+- Separate timer settings and image pairs per instance
 
-Edit the `TIME_LIMIT` constant in `components/ImageVoting.tsx`:
+### Interactive Image Voting
+- Clickable images instead of buttons
+- Blue border appears on hover
+- 20% opacity dimming on hover
+- Visual feedback for selected images
 
-```typescript
-const TIME_LIMIT = 10; // seconds
-```
+### Timer Control
+- Manual start on first slide
+- Auto-start on subsequent slides
+- Pause/resume functionality
+- Configurable duration (5-30 seconds)
 
-#### Adding New Image Categories
+### Modern UI Design
+- Light grey background (`bg-gray-200`)
+- Rounded corners (`rounded-[0.25rem]`)
+- Generous padding and spacing
+- Hover states for all interactive elements
 
-1. Add categories in Sanity (update the schema in `sanity/schemas/imageVoting.ts`)
-2. Filter images by category using the `getImagesByCategory` function
-3. Create category-specific voting sessions
+## Customization
 
-#### Styling
+### Changing Timer Duration
+Set the `timerLength` field in Sanity for each instance (5-30 seconds).
 
+### Adding Image Pairs
+1. Upload images to Sanity or use external URLs
+2. Add alt text for accessibility
+3. Set display order for proper sequencing
+
+### Styling
 The app uses Tailwind CSS with a custom design system. Modify `app/globals.css` to change colors and styling.
 
 ## Deployment
