@@ -9,11 +9,12 @@ export function CircularTimer({ timeRemaining, totalTime, isPaused = false, isSt
   const radius = 24;
   const circumference = 2 * Math.PI * radius;
   const progress = (totalTime - timeRemaining) / totalTime;
-  const strokeDashoffset = circumference - (progress * circumference);
+  // When not started, show full circle (no offset)
+  const strokeDashoffset = !isStarted ? 0 : circumference - (progress * circumference);
 
   // Use explicit colors instead of CSS classes
-  const progressColor = !isStarted ? "#9ca3af" : isPaused ? "#6b7280" : "#3b82f6"; // gray-400 when not started, gray-500 when paused, blue-500 when active
-  const textColor = !isStarted ? "#9ca3af" : isPaused ? "#6b7280" : "#000000"; // gray-400 when not started, gray-500 when paused, black when active
+  const progressColor = !isStarted ? "#000000" : isPaused ? "#6b7280" : "#3b82f6"; // black when not started, gray-500 when paused, blue-500 when active
+  const textColor = !isStarted ? "#000000" : isPaused ? "#6b7280" : "#000000"; // black when not started, gray-500 when paused, black when active
 
   return (
     <div className="relative w-16 h-16">

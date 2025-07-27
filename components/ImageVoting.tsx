@@ -10,9 +10,10 @@ import { ImageEntry } from '@/lib/sanity';
 
 interface VoteResult {
   imageId: string;
-  imageUrl: string;
+  imageUrl1: string;
+  imageUrl2: string;
   title: string;
-  vote: 'yes' | 'no' | 'timeout';
+  selectedImage: 'left' | 'right' | 'timeout';
 }
 
 interface ImageVotingProps {
@@ -79,12 +80,13 @@ export function ImageVoting({
         if (prev <= 0.1) {
           // Time's up - record as timeout and move to next
           if (!hasVoted) {
-                    setVotes(prevVotes => [...prevVotes, {
-          imageId: currentPair.id,
-          imageUrl: currentPair.imageUrl1,
-          title: currentPair.title,
-          vote: 'timeout'
-        }]);
+            setVotes(prevVotes => [...prevVotes, {
+              imageId: currentPair.id,
+              imageUrl1: currentPair.imageUrl1,
+              imageUrl2: currentPair.imageUrl2,
+              title: currentPair.title,
+              selectedImage: 'timeout'
+            }]);
           }
           nextPair();
           return TIME_LIMIT;
@@ -101,9 +103,10 @@ export function ImageVoting({
     
     setVotes(prevVotes => [...prevVotes, {
       imageId: currentPair.id,
-      imageUrl: vote === 'left' ? currentPair.imageUrl1 : currentPair.imageUrl2,
+      imageUrl1: currentPair.imageUrl1,
+      imageUrl2: currentPair.imageUrl2,
       title: currentPair.title,
-      vote: vote === 'left' ? 'yes' : 'no' // Map to yes/no for compatibility
+      selectedImage: vote
     }]);
     setHasVoted(true);
     setSelectedVote(vote);
@@ -143,9 +146,9 @@ export function ImageVoting({
     setIsPaused(!isPaused);
   };
 
-  const yesVotes = votes.filter(v => v.vote === 'yes').length;
-  const noVotes = votes.filter(v => v.vote === 'no').length;
-  const timeoutVotes = votes.filter(v => v.vote === 'timeout').length;
+  const leftVotes = votes.filter(v => v.selectedImage === 'left').length;
+  const rightVotes = votes.filter(v => v.selectedImage === 'right').length;
+  const timeoutVotes = votes.filter(v => v.selectedImage === 'timeout').length;
 
   // Handle case where no images are available
   if (!currentPair || !currentPair.imageUrl1 || !currentPair.imageUrl2) {
@@ -164,29 +167,73 @@ export function ImageVoting({
   if (isComplete) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen py-4 px-6">
-        <Card className="p-8 max-w-md w-full text-center">
-          <h1 className="mb-6">Voting Complete!</h1>
-          <div className="space-y-4 mb-6">
-            <div className="flex justify-between">
-              <span>Yes votes:</span>
-              <span className="text-green-600">{yesVotes}</span>
+        <Card className="px-6 py-20 max-w-[1280px] w-full relative rounded-[0.25rem] border-0 bg-gray-200">
+          <div className="space-y-8">
+            {/* Results Summary */}
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div className="bg-white p-4 rounded-lg">
+                <div className="text-2xl font-bold text-black">{leftVotes}</div>
+                <div className="text-sm text-muted-foreground">This</div>
+              </div>
+              <div className="bg-white p-4 rounded-lg">
+                <div className="text-2xl font-bold text-black">{rightVotes}</div>
+                <div className="text-sm text-muted-foreground">That</div>
+              </div>
+              <div className="bg-white p-4 rounded-lg">
+                <div className="text-2xl font-bold text-gray-500">{timeoutVotes}</div>
+                <div className="text-sm text-muted-foreground">Timed Out</div>
+              </div>
             </div>
-            <div className="flex justify-between">
-              <span>No votes:</span>
-              <span className="text-red-600">{noVotes}</span>
+
+            {/* Selected Images */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* This Images */}
+              <div>
+                <h3 className="text-lg font-medium mb-4 text-center">This</h3>
+                <div className="space-y-4">
+                  {votes.filter(v => v.selectedImage === 'left').map((vote, index) => (
+                    <div key={index} className="bg-white p-4 rounded-lg">
+                      <img 
+                        src={vote.imageUrl1} 
+                        alt={vote.title}
+                        className="w-full h-24 object-contain rounded"
+                      />
+                      <p className="text-sm text-muted-foreground mt-2">{vote.title}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* That Images */}
+              <div>
+                <h3 className="text-lg font-medium mb-4 text-center">That</h3>
+                <div className="space-y-4">
+                  {votes.filter(v => v.selectedImage === 'right').map((vote, index) => (
+                    <div key={index} className="bg-white p-4 rounded-lg">
+                      <img 
+                        src={vote.imageUrl2} 
+                        alt={vote.title}
+                        className="w-full h-24 object-contain rounded"
+                      />
+                      <p className="text-sm text-muted-foreground mt-2">{vote.title}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-            <div className="flex justify-between">
-              <span>Timed out:</span>
-              <span className="text-gray-500">{timeoutVotes}</span>
-            </div>
-            <div className="flex justify-between border-t pt-2">
-              <span>Total images:</span>
-              <span>{votes.length}</span>
+
+            {/* Start Again Button */}
+            <div className="text-center">
+              <Button 
+                onClick={resetGame} 
+                variant="outline"
+                className="px-8 h-12 rounded-[0.25rem] hover:bg-black hover:text-white transition-colors duration-300"
+              >
+                <RotateCcw className="w-5 h-5 mr-2" />
+                Start Again
+              </Button>
             </div>
           </div>
-          <Button onClick={resetGame} className="w-full">
-            Start Again
-          </Button>
         </Card>
       </div>
     );
@@ -210,21 +257,60 @@ export function ImageVoting({
     <div className="flex flex-col items-center justify-center min-h-screen py-4 px-6">
       <Card className="px-6 py-20 max-w-[1280px] w-full relative rounded-[0.25rem] border-0 bg-gray-200">
         {/* Top header with slide counter and title */}
-        <div className="absolute top-6 left-4 right-4 flex justify-between items-center px-[8px] py-[0px]">
-          <div className="flex items-center gap-4">
-                                 <span className="text-sm text-muted-foreground text-[24px]">
-                       {currentPairIndex + 1} / {availableImagePairs.length}
-                     </span>
-            {currentPair.title && (
-              <h2 className="text-lg font-medium text-foreground">
-                {currentPair.title}
-              </h2>
+        <div className="absolute top-6 left-4 right-4 flex justify-between items-start px-[8px] py-[0px]">
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-muted-foreground text-[24px]">
+                {currentPairIndex + 1} / {availableImagePairs.length}
+              </span>
+              {currentPair.title && (
+                <h2 className="text-lg font-medium text-foreground">
+                  {currentPair.title}
+                </h2>
+              )}
+            </div>
+            {/* Timer under title on small screens, centered on larger screens */}
+            <div className="md:hidden">
+              <CircularTimer timeRemaining={timeRemaining} totalTime={TIME_LIMIT} isPaused={isPaused} isStarted={isStarted} />
+            </div>
+          </div>
+          
+          {/* Start button inline with reset button on small screens */}
+          <div className="flex items-center gap-8 md:hidden">
+            {!isStarted && (
+              <Button
+                onClick={() => setIsStarted(true)}
+                variant="outline"
+                size="sm"
+                className="px-6 h-10 rounded-[0.25rem] uppercase font-light hover:bg-black hover:text-white transition-colors duration-300"
+              >
+                Start
+              </Button>
             )}
+            <div className="flex flex-col gap-4">
+              <Button
+                onClick={resetGame}
+                variant="outline"
+                size="sm"
+                className="w-10 h-10 p-0 rounded-[0.25rem] hover:bg-black hover:text-white transition-colors duration-300"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </Button>
+              
+              <Button
+                onClick={togglePause}
+                variant="outline"
+                size="sm"
+                className="w-10 h-10 p-0 rounded-[0.25rem] hover:bg-black hover:text-white transition-colors duration-300"
+              >
+                {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+              </Button>
+            </div>
           </div>
         </div>
         
-        {/* Centered timer and start button */}
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-4">
+        {/* Centered timer and start button - hidden on small screens */}
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 hidden md:flex flex-col items-center gap-4">
           <CircularTimer timeRemaining={timeRemaining} totalTime={TIME_LIMIT} isPaused={isPaused} isStarted={isStarted} />
           
           {!isStarted && (
@@ -239,8 +325,8 @@ export function ImageVoting({
           )}
         </div>
         
-        {/* Control buttons in top right */}
-        <div className="absolute top-6 right-4 flex flex-col gap-4">
+        {/* Control buttons in top right - hidden on small screens */}
+        <div className="absolute top-6 right-4 hidden md:flex flex-col gap-4">
           <Button
             onClick={resetGame}
             variant="outline"
@@ -263,35 +349,34 @@ export function ImageVoting({
         {/* Main content with padding to account for header */}
         <div className="pt-12">
           {/* Two images side by side, stacked on mobile */}
-          <div className="flex flex-col md:flex-row gap-4 justify-center">
+          <div className="flex flex-col md:flex-row gap-4 justify-center items-center">
             {/* Left Image - Clickable */}
             <div className="flex-1 flex flex-col items-center min-h-96">
-              <div className="text-center mb-4">
-                <span className="text-lg font-medium text-foreground">This</span>
-              </div>
               <div 
                 className={`flex-1 flex items-center justify-center cursor-pointer transition-all duration-300 ${
                   hasVoted || isPaused || !isStarted ? 'pointer-events-none' : ''
                 }`}
                 onClick={() => !hasVoted && !isPaused && isStarted && handleVote('left')}
               >
-                <div className={`relative border-2 border-transparent hover:border-blue-500 rounded-lg p-2 transition-all duration-300 hover:opacity-80 ${
+               <div className={`relative border-2 border-transparent hover:border-blue-500 rounded-lg p-2 transition-all duration-300 hover:opacity-80 ${
                   hasVoted && selectedVote === 'left' ? 'opacity-50' : ''
                 }`}>
                   <ImageWithFallback
                     src={currentPair.imageUrl1}
-                    alt={currentPair.title || `Image This`}
+                    alt={currentPair.title || `Image 1`}
                     className="w-full max-w-sm max-h-96 object-contain rounded-[0px]"
                   />
                 </div>
               </div>
             </div>
             
+            {/* OR text - hidden on mobile, visible on desktop */}
+            <div className="hidden md:flex items-center justify-center">
+              <span className="text-2xl font-bold text-foreground px-4">OR</span>
+            </div>
+            
             {/* Right Image - Clickable */}
             <div className="flex-1 flex flex-col items-center min-h-96">
-              <div className="text-center mb-4">
-                <span className="text-lg font-medium text-foreground">That</span>
-              </div>
               <div 
                 className={`flex-1 flex items-center justify-center cursor-pointer transition-all duration-300 ${
                   hasVoted || isPaused || !isStarted ? 'pointer-events-none' : ''
@@ -303,7 +388,7 @@ export function ImageVoting({
                 }`}>
                   <ImageWithFallback
                     src={currentPair.imageUrl2}
-                    alt={currentPair.title || `Image That`}
+                    alt={currentPair.title || `Image 2`}
                     className="w-full max-w-sm max-h-96 object-contain rounded-[0px]"
                   />
                 </div>
