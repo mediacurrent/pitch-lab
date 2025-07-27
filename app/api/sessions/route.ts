@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       instanceId: sessionData.instanceId,
       instanceTitle: sessionData.instanceTitle,
       sessionDate: new Date().toISOString(),
-      votes: sessionData.votes.map((vote, index) => ({
+      votes: sessionData.votes.map((vote: any, index: number) => ({
         _key: `vote_${index}_${Date.now()}`,
         ...vote
       })),
