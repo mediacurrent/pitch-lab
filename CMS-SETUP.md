@@ -1,6 +1,6 @@
-# CMS Setup Guide - Image Voting App
+# CMS Setup Guide - This or That
 
-This guide will help you set up and use the Sanity CMS for managing your Image Voting App.
+This guide will help you set up and use the Sanity CMS for managing your This or That application.
 
 ## 🚀 Quick Start
 

@@ -6,7 +6,7 @@ import { Navigation } from '@/components/Navigation'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Image Voting App',
+  title: 'Pitch Lab | Research & Development',
   description: 'Vote on images with a timer',
 }
 

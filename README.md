@@ -1,4 +1,4 @@
-# This or That - Image Voting App
+# This or That
 
 A modern multi-tenant image voting application built with Next.js 14 and Sanity CMS. Users can create "This or That" voting instances with custom images and timer settings.
 
@@ -36,7 +36,7 @@ A modern multi-tenant image voting application built with Next.js 14 and Sanity 
 
 ```bash
 git clone <your-repo-url>
-cd image-voting-app
+cd this-or-that
 npm install
 ```
 

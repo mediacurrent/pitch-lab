@@ -3,7 +3,7 @@
 const fs = require('fs')
 const path = require('path')
 
-console.log('🚀 Setting up Image Voting App...\n')
+console.log('🚀 Setting up This or That...\n')
 
 // Check if .env.local exists
 const envPath = path.join(process.cwd(), '.env.local')
