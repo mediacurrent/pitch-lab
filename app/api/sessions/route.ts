@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@sanity/client'
 
 export async function GET() {
+  console.log('GET /api/sessions called');
   return NextResponse.json({ 
     message: 'Sessions API is working',
     env: {
@@ -11,18 +12,27 @@ export async function GET() {
       dataset: process.env.NEXT_PUBLIC_SANITY_DATASET,
       tokenLength: process.env.SANITY_TOKEN?.length || 0,
     },
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    status: 'healthy'
   })
 }
 
 export async function POST(request: NextRequest) {
+  console.log('POST /api/sessions called');
+  console.log('Environment check at start:', {
+    hasProjectId: !!process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
+    hasToken: !!process.env.SANITY_TOKEN,
+    projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
+    dataset: process.env.NEXT_PUBLIC_SANITY_DATASET,
+  });
+  
   try {
     // Create a server-side Sanity client with write permissions
     let client;
     try {
       client = createClient({
-        projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
-        dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
+        projectId: process.env.SANITY_PROJECT_ID || process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
+        dataset: process.env.SANITY_DATASET || process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
         apiVersion: '2025-07-25',
         token: process.env.SANITY_TOKEN,
         useCdn: false,
@@ -37,10 +47,19 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate environment variables
-    if (!process.env.NEXT_PUBLIC_SANITY_PROJECT_ID) {
-      console.error('Missing NEXT_PUBLIC_SANITY_PROJECT_ID')
+    const projectId = process.env.SANITY_PROJECT_ID || process.env.NEXT_PUBLIC_SANITY_PROJECT_ID;
+    if (!projectId) {
+      console.error('Missing SANITY_PROJECT_ID or NEXT_PUBLIC_SANITY_PROJECT_ID')
       return NextResponse.json(
-        { error: 'Sanity project ID not configured' },
+        { 
+          error: 'Sanity project ID not configured',
+          details: 'The SANITY_PROJECT_ID (preferred) or NEXT_PUBLIC_SANITY_PROJECT_ID environment variable is missing in production. Please add it to your Vercel environment variables.',
+          env: {
+            hasProjectId: false,
+            hasToken: !!process.env.SANITY_TOKEN,
+            tokenLength: process.env.SANITY_TOKEN?.length || 0,
+          }
+        },
         { status: 500 }
       )
     }
@@ -48,7 +67,10 @@ export async function POST(request: NextRequest) {
     if (!process.env.SANITY_TOKEN) {
       console.error('Missing SANITY_TOKEN')
       return NextResponse.json(
-        { error: 'Sanity token not configured' },
+        { 
+          error: 'Sanity token not configured',
+          details: 'The SANITY_TOKEN environment variable is missing in production. Please add it to your Vercel environment variables.'
+        },
         { status: 500 }
       )
     }
@@ -60,8 +82,17 @@ export async function POST(request: NextRequest) {
     console.log('Token exists:', !!process.env.SANITY_TOKEN)
     console.log('Token length:', process.env.SANITY_TOKEN?.length)
 
-    const sessionData = await request.json()
-    console.log('Session data received:', sessionData)
+    let sessionData;
+    try {
+      sessionData = await request.json()
+      console.log('Session data received:', sessionData)
+    } catch (parseError) {
+      console.error('Failed to parse request JSON:', parseError);
+      return NextResponse.json(
+        { error: 'Invalid JSON in request body' },
+        { status: 400 }
+      );
+    }
 
     // Validate required fields
     if (!sessionData.userName || !sessionData.instanceId || !sessionData.instanceTitle) {

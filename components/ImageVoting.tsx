@@ -195,6 +195,12 @@ export function ImageVoting({
       } else {
         const errorData = await response.json().catch(() => ({}));
         console.error('Failed to save session:', response.statusText, errorData);
+        
+        // Show more helpful error message if it's a configuration issue
+        if (errorData.error === 'Sanity project ID not configured') {
+          console.error('Configuration Error: NEXT_PUBLIC_SANITY_PROJECT_ID is missing in production environment');
+        }
+        
         // Still mark as saved locally even if server save fails
         setSessionSaved(true);
       }
