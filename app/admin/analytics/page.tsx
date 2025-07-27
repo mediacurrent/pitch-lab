@@ -3,6 +3,9 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { BarChart3, TrendingUp, Clock, Target } from 'lucide-react'
 
+// Force dynamic rendering to avoid build-time Sanity client creation
+export const dynamic = 'force-dynamic'
+
 // Function to fetch all voting sessions with image data
 async function getAllVotingSessions() {
   const { createClient } = await import('@sanity/client')

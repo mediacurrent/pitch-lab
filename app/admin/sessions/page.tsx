@@ -5,6 +5,9 @@ import { Badge } from '@/components/ui/badge'
 import { Clock, Users, BarChart3, Calendar } from 'lucide-react'
 import Link from 'next/link'
 
+// Force dynamic rendering to avoid build-time Sanity client creation
+export const dynamic = 'force-dynamic'
+
 // Function to fetch all voting sessions
 async function getAllVotingSessions() {
   const { createClient } = await import('@sanity/client')

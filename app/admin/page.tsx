@@ -5,6 +5,9 @@ import { Badge } from '@/components/ui/badge'
 import { Plus, Edit, Trash2, ExternalLink, Star, Filter, BarChart3, Clock, Users, TrendingUp } from 'lucide-react'
 import Link from 'next/link'
 
+// Force dynamic rendering to avoid build-time Sanity client creation
+export const dynamic = 'force-dynamic'
+
 export default async function AdminPage() {
   let instances: ThisOrThatInstance[] = []
 

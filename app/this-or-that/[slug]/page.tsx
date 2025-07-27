@@ -2,6 +2,9 @@ import { ImageVoting } from '@/components/ImageVoting'
 import { getInstanceBySlug } from '@/lib/sanity'
 import { notFound } from 'next/navigation'
 
+// Force dynamic rendering to avoid build-time Sanity client creation
+export const dynamic = 'force-dynamic'
+
 interface InstancePageProps {
   params: {
     slug: string
