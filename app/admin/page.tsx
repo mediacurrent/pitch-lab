@@ -2,7 +2,7 @@ import { getAllInstances, type ThisOrThatInstance } from '@/lib/sanity'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Edit, Trash2, ExternalLink, Star, Filter, BarChart3, Clock, Users } from 'lucide-react'
+import { Plus, Edit, Trash2, ExternalLink, Star, Filter, BarChart3, Clock, Users, TrendingUp } from 'lucide-react'
 import Link from 'next/link'
 
 export default async function AdminPage() {
@@ -23,10 +23,16 @@ export default async function AdminPage() {
           <p className="text-muted-foreground">Manage your voting instances and content</p>
         </div>
         <div className="flex gap-2">
-          <Button asChild>
-            <Link href="/admin/instances/create">
-              <Plus className="w-4 h-4 mr-2" />
-              Create New
+          <Button variant="outline" asChild>
+            <Link href="/admin/sessions">
+              <BarChart3 className="w-4 h-4 mr-2" />
+              View Sessions
+            </Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link href="/admin/analytics">
+              <TrendingUp className="w-4 h-4 mr-2" />
+              Analytics
             </Link>
           </Button>
           <Button variant="outline" asChild>

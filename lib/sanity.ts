@@ -204,4 +204,69 @@ export async function getInstanceBySlug(slug: string): Promise<ThisOrThatInstanc
     console.error('Error fetching instance by slug from Sanity:', error)
     return null
   }
+}
+
+// Interface for voting session data
+export interface VotingSessionData {
+  userName: string
+  instanceId: string
+  instanceTitle: string
+  votes: {
+    imagePairTitle: string
+    imageUrl1: string
+    imageUrl2: string
+    selectedImage: 'left' | 'right' | 'timeout'
+    timeSpent: number
+  }[]
+  summary: {
+    totalVotes: number
+    leftVotes: number
+    rightVotes: number
+    timeoutVotes: number
+    averageTimePerVote: number
+  }
+}
+
+// Save a voting session to Sanity
+export async function saveVotingSession(sessionData: VotingSessionData): Promise<string | null> {
+  try {
+    const doc = {
+      _type: 'votingSession',
+      userName: sessionData.userName,
+      instanceId: sessionData.instanceId,
+      instanceTitle: sessionData.instanceTitle,
+      sessionDate: new Date().toISOString(),
+      votes: sessionData.votes,
+      summary: sessionData.summary,
+    }
+
+    const result = await client.create(doc)
+    return result._id
+  } catch (error) {
+    console.error('Error saving voting session to Sanity:', error)
+    return null
+  }
+}
+
+// Fetch voting sessions for a specific instance
+export async function getVotingSessionsForInstance(instanceId: string): Promise<any[]> {
+  try {
+    const query = `*[_type == "votingSession" && instanceId == $instanceId] | order(sessionDate desc) {
+      _id,
+      userName,
+      sessionDate,
+      summary,
+      votes[]{
+        imagePairTitle,
+        selectedImage,
+        timeSpent
+      }
+    }`
+
+    const sessions = await client.fetch(query, { instanceId })
+    return sessions || []
+  } catch (error) {
+    console.error('Error fetching voting sessions from Sanity:', error)
+    return []
+  }
 } 

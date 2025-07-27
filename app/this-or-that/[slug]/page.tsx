@@ -36,6 +36,7 @@ export default async function InstancePage({ params }: InstancePageProps) {
         timerLength={instance.timerLength}
         instanceTitle={instance.title}
         instanceDescription={instance.description}
+        instanceId={instance.id}
       />
     </div>
   )

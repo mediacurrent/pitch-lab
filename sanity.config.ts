@@ -13,6 +13,7 @@ import {apiVersion, dataset, projectId} from './sanity/env'
 import {schemaTypes} from './sanity/schemaTypes'
 
 export default defineConfig({
+  name: 'pitch-lab',
   basePath: '/studio',
   projectId,
   dataset,

@@ -12,14 +12,7 @@ export function Navigation() {
   return (
     <nav className="fixed top-4 right-4 z-50">
       <div className="flex gap-2">
-        {isAdmin && (
-          <Button asChild variant="outline" size="sm">
-            <Link href="/">
-              <Home className="w-4 h-4 mr-2" />
-              Voting
-            </Link>
-          </Button>
-        )}
+        {/* Navigation buttons can be added here if needed */}
       </div>
     </nav>
   )

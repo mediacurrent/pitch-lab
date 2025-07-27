@@ -6,7 +6,7 @@ import { Card } from './ui/card';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { CircularTimer } from './CircularTimer';
 import { Pause, Play, RotateCcw } from 'lucide-react';
-import { ImageEntry } from '@/lib/sanity';
+import { ImageEntry, type VotingSessionData } from '@/lib/sanity';
 
 interface VoteResult {
   imageId: string;
@@ -21,13 +21,15 @@ interface ImageVotingProps {
   timerLength?: number;
   instanceTitle?: string;
   instanceDescription?: string;
+  instanceId?: string;
 }
 
 export function ImageVoting({ 
   images = [], 
   timerLength = 10,
   instanceTitle,
-  instanceDescription 
+  instanceDescription,
+  instanceId
 }: ImageVotingProps) {
   const TIME_LIMIT = timerLength; // Use the instance's timer length
   const [currentPairIndex, setCurrentPairIndex] = useState(0);
@@ -38,6 +40,9 @@ export function ImageVoting({
   const [selectedVote, setSelectedVote] = useState<'left' | 'right' | null>(null);
   const [isPaused, setIsPaused] = useState(false);
   const [isStarted, setIsStarted] = useState(false);
+  const [userName, setUserName] = useState('');
+  const [showNameInput, setShowNameInput] = useState(false);
+  const [sessionSaved, setSessionSaved] = useState(false);
 
   // Use CMS images if available, otherwise fall back to sample images
   const SAMPLE_IMAGES = [
@@ -150,6 +155,51 @@ export function ImageVoting({
   const rightVotes = votes.filter(v => v.selectedImage === 'right').length;
   const timeoutVotes = votes.filter(v => v.selectedImage === 'timeout').length;
 
+  const saveSession = async (userName: string) => {
+    if (!instanceId || !instanceTitle) return;
+
+    const sessionData: VotingSessionData = {
+      userName,
+      instanceId,
+      instanceTitle,
+      votes: votes.map(vote => ({
+        imagePairTitle: vote.title,
+        imageUrl1: vote.imageUrl1,
+        imageUrl2: vote.imageUrl2,
+        selectedImage: vote.selectedImage,
+        timeSpent: TIME_LIMIT - timeRemaining, // This is approximate, could be improved
+      })),
+      summary: {
+        totalVotes: votes.length,
+        leftVotes,
+        rightVotes,
+        timeoutVotes,
+        averageTimePerVote: votes.length > 0 ? TIME_LIMIT : 0, // Simplified for now
+      },
+    };
+
+    try {
+      const response = await fetch('/api/sessions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(sessionData),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          setSessionSaved(true);
+        }
+      } else {
+        console.error('Failed to save session:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error saving session:', error);
+    }
+  };
+
   // Handle case where no images are available
   if (!currentPair || !currentPair.imageUrl1 || !currentPair.imageUrl2) {
     return (
@@ -221,6 +271,41 @@ export function ImageVoting({
                 </div>
               </div>
             </div>
+
+            {/* User Name Input and Session Saving */}
+            {!sessionSaved && instanceId && (
+              <div className="bg-white p-6 rounded-lg">
+                <h3 className="text-lg font-medium mb-4 text-center">Save Your Session</h3>
+                <div className="max-w-md mx-auto space-y-4">
+                  <div>
+                    <label htmlFor="userName" className="block text-sm font-medium text-gray-700 mb-2">
+                      Your Name
+                    </label>
+                    <input
+                      type="text"
+                      id="userName"
+                      value={userName}
+                      onChange={(e) => setUserName(e.target.value)}
+                      placeholder="Enter your name"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <Button 
+                    onClick={() => saveSession(userName)}
+                    disabled={!userName.trim()}
+                    className="w-full px-8 h-12 rounded-[0.25rem] hover:bg-black hover:text-white transition-colors duration-300"
+                  >
+                    Save Session
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {sessionSaved && (
+              <div className="bg-green-50 border border-green-200 p-4 rounded-lg text-center">
+                <p className="text-green-800 font-medium">Session saved successfully!</p>
+              </div>
+            )}
 
             {/* Start Again Button */}
             <div className="text-center">
