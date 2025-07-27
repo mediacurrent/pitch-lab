@@ -114,7 +114,7 @@ export default async function AnalyticsPage() {
   imageStatsArray.sort((a, b) => parseFloat(b.winRate) - parseFloat(a.winRate))
   
   // Overall stats
-  const totalVotes = sessions.reduce((sum: number, session) => sum + (session.votes?.length || 0), 0)
+  const totalVotes = sessions.reduce((sum: number, session: any) => sum + (session.votes?.length || 0), 0)
   const totalSessions = sessions.length
   const uniqueImages = imageStats.size
   const avgWinRate = imageStatsArray.length > 0 

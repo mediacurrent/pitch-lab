@@ -47,7 +47,7 @@ export default async function SessionsPage() {
 
   // Calculate stats
   const totalSessions = sessions.length
-  const totalVotes = sessions.reduce((sum, session) => sum + (session.summary?.totalVotes || 0), 0)
+  const totalVotes = sessions.reduce((sum: number, session: any) => sum + (session.summary?.totalVotes || 0), 0)
   const uniqueUsers = new Set(sessions.map(s => s.userName)).size
   const averageVotesPerSession = totalSessions > 0 ? Math.round(totalVotes / totalSessions) : 0
 
