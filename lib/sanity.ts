@@ -253,6 +253,11 @@ export interface VotingSessionData {
 
 // Save a voting session to Sanity
 export async function saveVotingSession(sessionData: VotingSessionData): Promise<string | null> {
+  if (!client) {
+    console.error('Sanity client not configured')
+    return null
+  }
+  
   try {
     const doc = {
       _type: 'votingSession',
@@ -274,6 +279,11 @@ export async function saveVotingSession(sessionData: VotingSessionData): Promise
 
 // Fetch voting sessions for a specific instance
 export async function getVotingSessionsForInstance(instanceId: string): Promise<any[]> {
+  if (!client) {
+    console.error('Sanity client not configured')
+    return []
+  }
+  
   try {
     const query = `*[_type == "votingSession" && instanceId == $instanceId] | order(sessionDate desc) {
       _id,

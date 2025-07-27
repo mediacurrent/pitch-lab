@@ -2,16 +2,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@sanity/client'
 
 export async function POST(request: NextRequest) {
-  // Create a server-side Sanity client with write permissions
-  const client = createClient({
-    projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || '',
-    dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
-    apiVersion: '2025-07-25',
-    token: process.env.SANITY_TOKEN, // This needs to be a token with write permissions
-    useCdn: false,
-  })
+  try {
+    // Create a server-side Sanity client with write permissions
+    const client = createClient({
+      projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || '',
+      dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
+      apiVersion: '2025-07-25',
+      token: process.env.SANITY_TOKEN, // This needs to be a token with write permissions
+      useCdn: false,
+    })
 
-      // Validate environment variables
+    // Validate environment variables
     if (!process.env.NEXT_PUBLIC_SANITY_PROJECT_ID) {
       return NextResponse.json(
         { error: 'Sanity project ID not configured' },

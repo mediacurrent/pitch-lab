@@ -10,8 +10,8 @@ async function getAllVotingSessions() {
   const { createClient } = await import('@sanity/client')
   
   const client = createClient({
-    projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID!,
-    dataset: process.env.NEXT_PUBLIC_SANITY_DATASET!,
+    projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || '',
+    dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
     apiVersion: '2025-07-25',
     useCdn: false,
   })
