@@ -1,21 +1,42 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@sanity/client'
 
+export async function GET() {
+  return NextResponse.json({ 
+    message: 'Sessions API is working',
+    env: {
+      hasProjectId: !!process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
+      hasToken: !!process.env.SANITY_TOKEN,
+      projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
+      dataset: process.env.NEXT_PUBLIC_SANITY_DATASET,
+    }
+  })
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Create a server-side Sanity client with write permissions
     const client = createClient({
-      projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || '',
+      projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
       dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
       apiVersion: '2025-07-25',
-      token: process.env.SANITY_TOKEN, // This needs to be a token with write permissions
+      token: process.env.SANITY_TOKEN,
       useCdn: false,
     })
 
     // Validate environment variables
     if (!process.env.NEXT_PUBLIC_SANITY_PROJECT_ID) {
+      console.error('Missing NEXT_PUBLIC_SANITY_PROJECT_ID')
       return NextResponse.json(
         { error: 'Sanity project ID not configured' },
+        { status: 500 }
+      )
+    }
+
+    if (!process.env.SANITY_TOKEN) {
+      console.error('Missing SANITY_TOKEN')
+      return NextResponse.json(
+        { error: 'Sanity token not configured' },
         { status: 500 }
       )
     }
@@ -58,6 +79,8 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('Attempting to create document in Sanity...')
+    console.log('Document to create:', JSON.stringify(doc, null, 2))
+    
     const result = await client.create(doc)
     console.log('Document created successfully:', result._id)
 
@@ -68,6 +91,11 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error saving voting session:', error)
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : undefined
+    })
     return NextResponse.json(
       { error: 'Failed to save session', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
