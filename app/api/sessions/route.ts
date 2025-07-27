@@ -9,20 +9,32 @@ export async function GET() {
       hasToken: !!process.env.SANITY_TOKEN,
       projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
       dataset: process.env.NEXT_PUBLIC_SANITY_DATASET,
-    }
+      tokenLength: process.env.SANITY_TOKEN?.length || 0,
+    },
+    timestamp: new Date().toISOString()
   })
 }
 
 export async function POST(request: NextRequest) {
   try {
     // Create a server-side Sanity client with write permissions
-    const client = createClient({
-      projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
-      dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
-      apiVersion: '2025-07-25',
-      token: process.env.SANITY_TOKEN,
-      useCdn: false,
-    })
+    let client;
+    try {
+      client = createClient({
+        projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
+        dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
+        apiVersion: '2025-07-25',
+        token: process.env.SANITY_TOKEN,
+        useCdn: false,
+      });
+      console.log('Sanity client created successfully');
+    } catch (clientError) {
+      console.error('Failed to create Sanity client:', clientError);
+      return NextResponse.json(
+        { error: 'Failed to create Sanity client', details: clientError instanceof Error ? clientError.message : 'Unknown error' },
+        { status: 500 }
+      );
+    }
 
     // Validate environment variables
     if (!process.env.NEXT_PUBLIC_SANITY_PROJECT_ID) {
@@ -80,6 +92,18 @@ export async function POST(request: NextRequest) {
 
     console.log('Attempting to create document in Sanity...')
     console.log('Document to create:', JSON.stringify(doc, null, 2))
+    
+    // Test the connection first
+    try {
+      const testQuery = await client.fetch('*[_type == "votingSession"] | order(_createdAt desc)[0...1]');
+      console.log('Sanity connection test successful, found', testQuery?.length || 0, 'existing sessions');
+    } catch (testError) {
+      console.error('Sanity connection test failed:', testError);
+      return NextResponse.json(
+        { error: 'Sanity connection failed', details: testError instanceof Error ? testError.message : 'Unknown error' },
+        { status: 500 }
+      );
+    }
     
     const result = await client.create(doc)
     console.log('Document created successfully:', result._id)

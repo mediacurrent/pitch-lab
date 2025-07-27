@@ -193,10 +193,15 @@ export function ImageVoting({
           setSessionSaved(true);
         }
       } else {
-        console.error('Failed to save session:', response.statusText);
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Failed to save session:', response.statusText, errorData);
+        // Still mark as saved locally even if server save fails
+        setSessionSaved(true);
       }
     } catch (error) {
       console.error('Error saving session:', error);
+      // Still mark as saved locally even if server save fails
+      setSessionSaved(true);
     }
   };
 
