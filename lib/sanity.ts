@@ -2,17 +2,21 @@ import { createClient } from 'next-sanity'
 import imageUrlBuilder from '@sanity/image-url'
 import { apiVersion, dataset, projectId } from '../sanity/env'
 
-export const client = createClient({
-  projectId,
-  dataset,
-  apiVersion,
-  useCdn: false, // Set to false for fresh data
-  perspective: 'published', // Only get published content
-})
+// Create client only if environment variables are available
+export const client = typeof projectId === 'string' && projectId.length > 0 
+  ? createClient({
+      projectId,
+      dataset,
+      apiVersion,
+      useCdn: false, // Set to false for fresh data
+      perspective: 'published', // Only get published content
+    })
+  : null
 
-const builder = imageUrlBuilder(client)
+const builder = client ? imageUrlBuilder(client) : null
 
 export function urlFor(source: any) {
+  if (!builder) return null
   return builder.image(source)
 }
 
@@ -31,6 +35,11 @@ export interface ImageEntry {
 }
 
 export async function getAllImages(): Promise<ImageEntry[]> {
+  if (!client) {
+    console.error('Sanity client not configured')
+    return []
+  }
+  
   try {
     const query = `*[_type == "imagePair"] {
       _id,
@@ -60,6 +69,11 @@ export async function getAllImages(): Promise<ImageEntry[]> {
 
 
 export async function getImageById(id: string): Promise<ImageEntry | null> {
+  if (!client) {
+    console.error('Sanity client not configured')
+    return null
+  }
+  
   try {
     const query = `*[_type == "imagePair" && _id == $id][0] {
       _id,
@@ -115,6 +129,11 @@ export interface ThisOrThatInstance {
 
 // Fetch all active This or That
 export async function getAllInstances(): Promise<ThisOrThatInstance[]> {
+  if (!client) {
+    console.error('Sanity client not configured')
+    return []
+  }
+  
   try {
     const query = `*[_type == "thisOrThatInstance" && isActive == true] {
       _id,
@@ -160,6 +179,11 @@ export async function getAllInstances(): Promise<ThisOrThatInstance[]> {
 
 // Fetch a specific This or That by slug
 export async function getInstanceBySlug(slug: string): Promise<ThisOrThatInstance | null> {
+  if (!client) {
+    console.error('Sanity client not configured')
+    return null
+  }
+  
   try {
     const query = `*[_type == "thisOrThatInstance" && slug.current == $slug && isActive == true][0] {
       _id,
