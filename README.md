@@ -1,10 +1,10 @@
-# This or That
+# Pitch Lab
 
-A modern multi-tenant image voting application built with Next.js 14 and Sanity CMS. Users can create "This or That" voting instances with custom images and timer settings.
+A modern multi-tenant image voting application built with Next.js 14 and Sanity CMS. Users can create voting instances with custom images and timer settings.
 
 ## Features
 
-- 🎯 **Multi-Tenant Instances**: Create multiple "This or That" voting sessions
+- 🎯 **Multi-Tenant Instances**: Create multiple voting sessions
 - 🖼️ **Image Pair Voting**: Vote between two images with clickable interface
 - ⏱️ **Configurable Timers**: Set timer length from 5-30 seconds per instance
 - 📱 **Responsive Design**: Works seamlessly on desktop and mobile devices
@@ -36,7 +36,7 @@ A modern multi-tenant image voting application built with Next.js 14 and Sanity 
 
 ```bash
 git clone <your-repo-url>
-cd this-or-that
+cd pitch-lab
 npm install
 ```
 
@@ -84,7 +84,7 @@ Open [http://localhost:3000](http://localhost:3000) to view the app.
 ```
 ├── app/                           # Next.js App Router
 │   ├── admin/                    # Admin pages for instance management
-│   ├── this-or-that/[slug]/      # Dynamic instance pages
+│   ├── pitch-lab/[slug]/      # Dynamic instance pages
 │   ├── globals.css               # Global styles
 │   ├── layout.tsx                # Root layout
 │   └── page.tsx                  # Home page with instance gallery
@@ -130,8 +130,8 @@ Open [http://localhost:3000](http://localhost:3000) to view the app.
 ## Key Features
 
 ### Multi-Tenant Architecture
-- Each "This or That" instance is independent
-- Unique URLs: `/this-or-that/{slug}`
+- Each voting instance is independent
+- Unique URLs: `/pitch-lab/{slug}`
 - Separate timer settings and image pairs per instance
 
 ### Interactive Image Voting

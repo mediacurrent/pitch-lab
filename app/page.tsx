@@ -24,7 +24,7 @@ export default async function Home() {
         <Card className="max-w-md mx-auto">
           <CardContent className="pt-6">
             <p className="text-muted-foreground text-center py-8">
-              No This or That available yet. Check back soon!
+              No Pitch Lab available yet. Check back soon!
             </p>
           </CardContent>
         </Card>
@@ -52,7 +52,7 @@ export default async function Home() {
                     <span className="font-medium">{instance.imagePairs.length}</span>
                   </div>
                 </div>
-                <Link href={`/this-or-that/${instance.slug}`} className="w-full">
+                <Link href={`/pitch-lab/${instance.slug}`} className="w-full">
                   <Button className="w-full">Start Voting</Button>
                 </Link>
               </CardContent>

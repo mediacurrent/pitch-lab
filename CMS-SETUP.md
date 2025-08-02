@@ -1,6 +1,6 @@
-# CMS Setup Guide - This or That
+# CMS Setup Guide - Pitch Lab
 
-This guide will help you set up and use the Sanity CMS for managing your This or That application.
+This guide will help you set up and use the Sanity CMS for managing your Pitch Lab application.
 
 ## 🚀 Quick Start
 

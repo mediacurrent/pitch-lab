@@ -106,7 +106,7 @@ export async function getImageById(id: string): Promise<ImageEntry | null> {
 
 
 
-// New interfaces for This or That instances
+// New interfaces for Pitch Lab instances
 export interface ImagePairEntry {
   title: string
   imageUrl1: string
@@ -127,7 +127,7 @@ export interface ThisOrThatInstance {
   imagePairs: ImagePairEntry[]
 }
 
-// Fetch all active This or That
+// Fetch all active Pitch Lab
 export async function getAllInstances(): Promise<ThisOrThatInstance[]> {
   if (!client) {
     console.error('Sanity client not configured')
@@ -177,7 +177,7 @@ export async function getAllInstances(): Promise<ThisOrThatInstance[]> {
   }
 }
 
-// Fetch a specific This or That by slug
+// Fetch a specific Pitch Lab by slug
 export async function getInstanceBySlug(slug: string): Promise<ThisOrThatInstance | null> {
   if (!client) {
     console.error('Sanity client not configured')

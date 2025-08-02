@@ -22,7 +22,7 @@ export default async function AdminPage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold">This or That Management</h1>
+          <h1 className="text-3xl font-bold">Pitch Lab Management</h1>
           <p className="text-muted-foreground">Manage your voting instances and content</p>
         </div>
         <div className="flex gap-2">
@@ -156,7 +156,7 @@ export default async function AdminPage() {
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" className="flex-1" asChild>
-                  <Link href={`/this-or-that/${instance.slug}`}>
+                  <Link href={`/pitch-lab/${instance.slug}`}>
                     <ExternalLink className="w-4 h-4 mr-2" />
                     View
                   </Link>
@@ -176,7 +176,7 @@ export default async function AdminPage() {
       {instances.length === 0 && (
         <Card className="text-center py-12">
           <CardContent>
-            <p className="text-muted-foreground mb-4">No This or That instances found</p>
+            <p className="text-muted-foreground mb-4">No Pitch Lab instances found</p>
             <Button asChild>
               <Link href="/admin/instances/create">
                 <Plus className="w-4 h-4 mr-2" />

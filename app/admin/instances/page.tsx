@@ -12,7 +12,7 @@ export default async function InstancesAdminPage() {
   return (
     <div className="container mx-auto py-8">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">This or That</h1>
+        <h1 className="text-3xl font-bold">Pitch Lab</h1>
         <Link href="/admin/instances/create">
           <Button>Create New</Button>
         </Link>
@@ -22,7 +22,7 @@ export default async function InstancesAdminPage() {
         <Card>
           <CardContent className="pt-6">
             <p className="text-muted-foreground text-center py-8">
-              No This or That found. Create your first one!
+              No Pitch Lab found. Create your first one!
             </p>
           </CardContent>
         </Card>
@@ -58,7 +58,7 @@ export default async function InstancesAdminPage() {
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">URL:</span>
                     <span className="font-mono text-xs truncate">
-                      /this-or-that/{instance.slug}
+                      /pitch-lab/{instance.slug}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
@@ -67,7 +67,7 @@ export default async function InstancesAdminPage() {
                   </div>
                 </div>
                 <div className="flex gap-2 mt-4">
-                  <Link href={`/this-or-that/${instance.slug}`} className="flex-1">
+                  <Link href={`/pitch-lab/${instance.slug}`} className="flex-1">
                     <Button variant="outline" size="sm" className="w-full">
                       View
                     </Button>
