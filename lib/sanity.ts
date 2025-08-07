@@ -443,8 +443,14 @@ export interface SliderSessionData {
 
 // Save a slider session to Sanity
 export async function saveSliderSession(sessionData: SliderSessionData): Promise<string | null> {
+  console.log('🔍 saveSliderSession called')
+  console.log('🔍 writeClient exists:', !!writeClient)
+  console.log('🔍 SANITY_API_TOKEN exists:', !!process.env.SANITY_API_TOKEN)
+  console.log('🔍 Token length:', process.env.SANITY_API_TOKEN?.length || 0)
+  
   if (!writeClient) {
-    console.error('Sanity write client not configured')
+    console.error('❌ Sanity write client not configured')
+    console.error('❌ writeClient is null')
     return null
   }
   
@@ -472,10 +478,12 @@ export async function saveSliderSession(sessionData: SliderSessionData): Promise
       },
     }
 
+    console.log('🔍 Attempting to create document with writeClient')
     const result = await writeClient.create(doc)
+    console.log('✅ Document created successfully:', result._id)
     return result._id
   } catch (error) {
-    console.error('Error saving slider session to Sanity:', error)
+    console.error('❌ Error saving slider session to Sanity:', error)
     return null
   }
 }
