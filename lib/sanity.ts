@@ -2,7 +2,7 @@ import { createClient } from 'next-sanity'
 import imageUrlBuilder from '@sanity/image-url'
 import { apiVersion, dataset, projectId } from '../sanity/env'
 
-// Create client only if environment variables are available
+// Create read-only client for fetching data
 export const client = typeof projectId === 'string' && projectId.length > 0 
   ? createClient({
       projectId,
@@ -10,6 +10,17 @@ export const client = typeof projectId === 'string' && projectId.length > 0
       apiVersion,
       useCdn: false, // Set to false for fresh data
       perspective: 'published', // Only get published content
+    })
+  : null
+
+// Create write client for creating/updating data
+export const writeClient = typeof projectId === 'string' && projectId.length > 0 
+  ? createClient({
+      projectId,
+      dataset,
+      apiVersion,
+      useCdn: false,
+      token: process.env.SANITY_API_TOKEN, // Token with write permissions
     })
   : null
 
@@ -270,8 +281,8 @@ export interface VotingSessionData {
 
 // Save a voting session to Sanity
 export async function saveVotingSession(sessionData: VotingSessionData): Promise<string | null> {
-  if (!client) {
-    console.error('Sanity client not configured')
+  if (!writeClient) {
+    console.error('Sanity write client not configured')
     return null
   }
   
@@ -286,7 +297,7 @@ export async function saveVotingSession(sessionData: VotingSessionData): Promise
       summary: sessionData.summary,
     }
 
-    const result = await client.create(doc)
+    const result = await writeClient.create(doc)
     return result._id
   } catch (error) {
     console.error('Error saving voting session to Sanity:', error)
@@ -432,8 +443,8 @@ export interface SliderSessionData {
 
 // Save a slider session to Sanity
 export async function saveSliderSession(sessionData: SliderSessionData): Promise<string | null> {
-  if (!client) {
-    console.error('Sanity client not configured')
+  if (!writeClient) {
+    console.error('Sanity write client not configured')
     return null
   }
   
@@ -461,7 +472,7 @@ export async function saveSliderSession(sessionData: SliderSessionData): Promise
       },
     }
 
-    const result = await client.create(doc)
+    const result = await writeClient.create(doc)
     return result._id
   } catch (error) {
     console.error('Error saving slider session to Sanity:', error)
