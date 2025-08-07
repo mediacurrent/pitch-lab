@@ -68,7 +68,7 @@ export function SubmissionForm({ sliderValues, sliderData, onSubmit }: Submissio
     return (
       <Button
         onClick={() => setShowForm(true)}
-        className="flex items-center gap-2"
+        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white"
       >
         <Send className="h-4 w-4" />
         Submit Assessment
