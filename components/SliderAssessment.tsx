@@ -65,13 +65,22 @@ export default function SliderAssessment({ slider }: SliderAssessmentProps) {
         }
       }
 
-      // Save to Sanity
-      const result = await saveSliderSession(sessionData)
-      
-      if (result) {
+      // Save to Sanity via API route
+      const response = await fetch('/api/slider-sessions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(sessionData),
+      })
+
+      if (response.ok) {
+        const result = await response.json()
         console.log('✅ Slider session saved to Sanity:', result)
         toast.success('Assessment submitted successfully!')
       } else {
+        const errorData = await response.json()
+        console.error('❌ API error:', errorData)
         throw new Error('Failed to save session')
       }
 
