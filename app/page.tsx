@@ -1,4 +1,4 @@
-import { getAllInstances } from '@/lib/sanity'
+import { getAllInstances, getAllSliders } from '@/lib/sanity'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
@@ -7,7 +7,10 @@ import Link from 'next/link'
 export const dynamic = 'force-dynamic'
 
 export default async function Home() {
-  const instances = await getAllInstances()
+  const [instances, sliders] = await Promise.all([
+    getAllInstances(),
+    getAllSliders()
+  ])
 
   return (
     <div className="container mx-auto py-8">
@@ -20,44 +23,89 @@ export default async function Home() {
         </svg>
       </div>
 
-      {instances.length === 0 ? (
+      {instances.length === 0 && sliders.length === 0 ? (
         <Card className="max-w-md mx-auto">
           <CardContent className="pt-6">
             <p className="text-muted-foreground text-center py-8">
-              No Pitch Lab available yet. Check back soon!
+              No content available yet. Check back soon!
             </p>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
-          {instances.map((instance) => (
-            <Card key={instance.id} className="hover:shadow-lg transition-shadow pt-6">
-              <CardHeader>
-                <CardTitle className="flex justify-between items-start">
-                  <span className="truncate">{instance.title}</span>
-                  <span className="text-sm font-normal text-muted-foreground ml-2">
-                    {instance.timerLength}s
-                  </span>
-                </CardTitle>
-                {instance.description && (
-                  <CardDescription className="line-clamp-2">
-                    {instance.description}
-                  </CardDescription>
-                )}
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2 mb-4">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Image Pairs:</span>
-                    <span className="font-medium">{instance.imagePairs.length}</span>
-                  </div>
-                </div>
-                <Link href={`/pitch-lab/${instance.slug}`} className="w-full">
-                  <Button className="w-full">Start Voting</Button>
-                </Link>
-              </CardContent>
-            </Card>
-          ))}
+        <div className="space-y-12">
+          {/* Image Voting Section */}
+          {instances.length > 0 && (
+            <div>
+              <h2 className="text-2xl font-bold mb-6">Image Voting</h2>
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
+                {instances.map((instance) => (
+                  <Card key={instance.id} className="hover:shadow-lg transition-shadow pt-6">
+                    <CardHeader>
+                      <CardTitle className="flex justify-between items-start">
+                        <span className="truncate">{instance.title}</span>
+                        <span className="text-sm font-normal text-muted-foreground ml-2">
+                          {instance.timerLength}s
+                        </span>
+                      </CardTitle>
+                      {instance.description && (
+                        <CardDescription className="line-clamp-2">
+                          {instance.description}
+                        </CardDescription>
+                      )}
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2 mb-4">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Image Pairs:</span>
+                          <span className="font-medium">{instance.imagePairs.length}</span>
+                        </div>
+                      </div>
+                      <Link href={`/this-or-that/${instance.slug}`} className="w-full">
+                        <Button className="w-full">Start Voting</Button>
+                      </Link>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Slider Assessments Section */}
+          {sliders.length > 0 && (
+            <div>
+              <h2 className="text-2xl font-bold mb-6">Slider Assessments</h2>
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
+                {sliders.map((slider) => (
+                  <Card key={slider.id} className="hover:shadow-lg transition-shadow pt-6">
+                    <CardHeader>
+                      <CardTitle className="flex justify-between items-start">
+                        <span className="truncate">{slider.title}</span>
+                        <span className="text-sm font-normal text-muted-foreground ml-2">
+                          Slider
+                        </span>
+                      </CardTitle>
+                      {slider.description && (
+                        <CardDescription className="line-clamp-2">
+                          {slider.description}
+                        </CardDescription>
+                      )}
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2 mb-4">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Slider Pairs:</span>
+                          <span className="font-medium">{slider.sliderPairs.length}</span>
+                        </div>
+                      </div>
+                      <Link href={`/sliders/${slider.slug}`} className="w-full">
+                        <Button className="w-full">Start Assessment</Button>
+                      </Link>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

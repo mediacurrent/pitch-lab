@@ -133,7 +133,7 @@ export default function SliderAssessment({ slider }: SliderAssessmentProps) {
               <h3 className="font-medium text-blue-900 mb-1">How to Complete This Assessment</h3>
               <ol className="text-sm text-blue-800 space-y-1 list-decimal list-inside">
                 <li>Review each criterion below and drag the sliders based on your preferences</li>
-                <li>Click "Submit Assessment" to securely save your responses for analysis</li>
+                <li>Click &quot;Submit Assessment&quot; to securely save your responses for analysis</li>
               </ol>
             </div>
           </div>

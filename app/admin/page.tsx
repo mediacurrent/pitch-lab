@@ -1,4 +1,4 @@
-import { getAllInstances, type ThisOrThatInstance } from '@/lib/sanity'
+import { getAllSliders, getAllInstances, type SliderInstance, type ThisOrThatInstance } from '@/lib/sanity'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -9,10 +9,14 @@ import Link from 'next/link'
 export const dynamic = 'force-dynamic'
 
 export default async function AdminPage() {
+  let sliders: SliderInstance[] = []
   let instances: ThisOrThatInstance[] = []
 
   try {
-    instances = await getAllInstances()
+    [sliders, instances] = await Promise.all([
+      getAllSliders(),
+      getAllInstances()
+    ])
   } catch (error) {
     console.log('Sanity not configured')
   }
@@ -23,7 +27,7 @@ export default async function AdminPage() {
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold">Pitch Lab Management</h1>
-          <p className="text-muted-foreground">Manage your voting instances and content</p>
+          <p className="text-muted-foreground">Manage your voting instances and slider assessments</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" asChild>
@@ -53,8 +57,8 @@ export default async function AdminPage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Instances</p>
-                <p className="text-2xl font-bold">{instances.length}</p>
+                <p className="text-sm font-medium text-muted-foreground">Total Content</p>
+                <p className="text-2xl font-bold">{sliders.length + instances.length}</p>
               </div>
               <BarChart3 className="h-8 w-8 text-muted-foreground" />
             </div>
@@ -65,10 +69,8 @@ export default async function AdminPage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Image Pairs</p>
-                <p className="text-2xl font-bold">
-                  {instances.reduce((total, instance) => total + instance.imagePairs.length, 0)}
-                </p>
+                <p className="text-sm font-medium text-muted-foreground">Image Voting</p>
+                <p className="text-2xl font-bold">{instances.length}</p>
               </div>
               <Filter className="h-8 w-8 text-muted-foreground" />
             </div>
@@ -79,8 +81,8 @@ export default async function AdminPage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Active Instances</p>
-                <p className="text-2xl font-bold">{instances.filter(instance => instance.isActive).length}</p>
+                <p className="text-sm font-medium text-muted-foreground">Slider Assessments</p>
+                <p className="text-2xl font-bold">{sliders.length}</p>
               </div>
               <Star className="h-8 w-8 text-muted-foreground" />
             </div>
@@ -91,11 +93,9 @@ export default async function AdminPage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Avg Timer Length</p>
+                <p className="text-sm font-medium text-muted-foreground">Active Content</p>
                 <p className="text-2xl font-bold">
-                  {instances.length > 0 
-                    ? Math.round(instances.reduce((total, instance) => total + instance.timerLength, 0) / instances.length)
-                    : 0}s
+                  {sliders.filter(s => s.isActive).length + instances.filter(i => i.isActive).length}
                 </p>
               </div>
               <Clock className="h-8 w-8 text-muted-foreground" />
@@ -104,83 +104,153 @@ export default async function AdminPage() {
         </Card>
       </div>
 
-      {/* Instances Grid */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {instances.map((instance) => (
-          <Card key={instance.id} className="overflow-hidden">
-            <div className="aspect-video relative bg-gray-100 flex items-center justify-center">
-              {instance.imagePairs.length > 0 ? (
-                <div className="flex gap-2 p-4">
-                  <img
-                    src={instance.imagePairs[0].imageUrl1}
-                    alt={`${instance.title} - Image 1`}
-                    className="w-1/2 h-20 object-cover rounded"
-                  />
-                  <img
-                    src={instance.imagePairs[0].imageUrl2}
-                    alt={`${instance.title} - Image 2`}
-                    className="w-1/2 h-20 object-cover rounded"
-                  />
-                </div>
-              ) : (
-                <div className="text-muted-foreground text-sm">No images</div>
-              )}
+      {/* Content Grid */}
+      <div className="space-y-8">
+        {/* Image Voting Instances */}
+        {instances.length > 0 && (
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Image Voting Instances</h2>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {instances.map((instance) => (
+                <Card key={instance.id} className="overflow-hidden">
+                  <div className="aspect-video relative bg-gray-100 flex items-center justify-center">
+                    {instance.imagePairs.length > 0 ? (
+                      <div className="flex gap-2 p-4">
+                        <div className="w-1/2 h-20 bg-gray-200 rounded flex items-center justify-center text-xs text-gray-500">
+                          Image 1
+                        </div>
+                        <div className="w-1/2 h-20 bg-gray-200 rounded flex items-center justify-center text-xs text-gray-500">
+                          Image 2
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-muted-foreground text-sm">No images</div>
+                    )}
 
-              {instance.isActive && (
-                <div className="absolute top-2 left-2">
-                  <Badge variant="default">Active</Badge>
-                </div>
-              )}
+                    {instance.isActive && (
+                      <div className="absolute top-2 left-2">
+                        <Badge variant="default">Active</Badge>
+                      </div>
+                    )}
+                  </div>
+                  <CardHeader>
+                    <CardTitle className="text-lg">{instance.title}</CardTitle>
+                    {instance.description && (
+                      <CardDescription>{instance.description}</CardDescription>
+                    )}
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      <Badge variant="secondary">
+                        <Clock className="w-3 h-3 mr-1" />
+                        {instance.timerLength}s
+                      </Badge>
+                      <Badge variant="outline">
+                        {instance.imagePairs.length} pairs
+                      </Badge>
+                      {instance.createdBy && (
+                        <Badge variant="outline">
+                          By {instance.createdBy}
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="flex-1" asChild>
+                        <Link href={`/this-or-that/${instance.slug}`}>
+                          <ExternalLink className="w-4 h-4 mr-2" />
+                          View
+                        </Link>
+                      </Button>
+                      <Button variant="outline" size="sm" className="flex-1" asChild>
+                        <Link href={`/admin/instances/${instance.id}/edit`}>
+                          <Edit className="w-4 h-4 mr-2" />
+                          Edit
+                        </Link>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
-            <CardHeader>
-              <CardTitle className="text-lg">{instance.title}</CardTitle>
-              {instance.description && (
-                <CardDescription>{instance.description}</CardDescription>
-              )}
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2 mb-4">
-                <Badge variant="secondary">
-                  <Clock className="w-3 h-3 mr-1" />
-                  {instance.timerLength}s
-                </Badge>
-                <Badge variant="outline">
-                  <Users className="w-3 h-3 mr-1" />
-                  {instance.imagePairs.length} pairs
-                </Badge>
-                {instance.createdBy && (
-                  <Badge variant="outline">
-                    By {instance.createdBy}
-                  </Badge>
-                )}
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="flex-1" asChild>
-                  <Link href={`/pitch-lab/${instance.slug}`}>
-                    <ExternalLink className="w-4 h-4 mr-2" />
-                    View
-                  </Link>
-                </Button>
-                <Button variant="outline" size="sm" className="flex-1" asChild>
-                  <Link href={`/admin/instances/${instance.id}/edit`}>
-                    <Edit className="w-4 h-4 mr-2" />
-                    Edit
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+          </div>
+        )}
+
+        {/* Slider Assessments */}
+        {sliders.length > 0 && (
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Slider Assessments</h2>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {sliders.map((slider) => (
+                <Card key={slider.id} className="overflow-hidden">
+                  <div className="aspect-video relative bg-gray-100 flex items-center justify-center">
+                    {slider.sliderPairs.length > 0 ? (
+                      <div className="flex flex-col gap-2 p-4 w-full">
+                        <div className="text-center text-sm font-medium text-gray-700">
+                          {slider.sliderPairs[0].title}
+                        </div>
+                        <div className="flex justify-between text-xs text-gray-500">
+                          <span>{slider.sliderPairs[0].leftSide}</span>
+                          <span>{slider.sliderPairs[0].rightSide}</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-muted-foreground text-sm">No slider pairs</div>
+                    )}
+
+                    {slider.isActive && (
+                      <div className="absolute top-2 left-2">
+                        <Badge variant="default">Active</Badge>
+                      </div>
+                    )}
+                  </div>
+                  <CardHeader>
+                    <CardTitle className="text-lg">{slider.title}</CardTitle>
+                    {slider.description && (
+                      <CardDescription>{slider.description}</CardDescription>
+                    )}
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      <Badge variant="secondary">
+                        <Filter className="w-3 h-3 mr-1" />
+                        {slider.sliderPairs.length} pairs
+                      </Badge>
+                      {slider.createdBy && (
+                        <Badge variant="outline">
+                          By {slider.createdBy}
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="flex-1" asChild>
+                        <Link href={`/sliders/${slider.slug}`}>
+                          <ExternalLink className="w-4 h-4 mr-2" />
+                          View
+                        </Link>
+                      </Button>
+                      <Button variant="outline" size="sm" className="flex-1" asChild>
+                        <Link href={`/admin/instances/${slider.id}/edit`}>
+                          <Edit className="w-4 h-4 mr-2" />
+                          Edit
+                        </Link>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
-      {instances.length === 0 && (
+      {instances.length === 0 && sliders.length === 0 && (
         <Card className="text-center py-12">
           <CardContent>
-            <p className="text-muted-foreground mb-4">No Pitch Lab instances found</p>
+            <p className="text-muted-foreground mb-4">No content found</p>
             <Button asChild>
               <Link href="/admin/instances/create">
                 <Plus className="w-4 h-4 mr-2" />
-                Create Your First Instance
+                Create Your First Content
               </Link>
             </Button>
           </CardContent>

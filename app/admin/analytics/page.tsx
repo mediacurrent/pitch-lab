@@ -1,13 +1,13 @@
-import { getAllInstances } from '@/lib/sanity'
-import { Card } from '@/components/ui/card'
+import { getAllSliders, getSliderSessionsForInstance } from '@/lib/sanity'
+import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { BarChart3, TrendingUp, Clock, Target } from 'lucide-react'
+import { BarChart3, TrendingUp, Clock, Users, Filter } from 'lucide-react'
 
 // Force dynamic rendering to avoid build-time Sanity client creation
 export const dynamic = 'force-dynamic'
 
-// Function to fetch all voting sessions with image data
-async function getAllVotingSessions() {
+// Function to fetch all slider sessions
+async function getAllSliderSessions() {
   const { createClient } = await import('@sanity/client')
   
   const client = createClient({
@@ -18,17 +18,17 @@ async function getAllVotingSessions() {
   })
 
   try {
-    const query = `*[_type == "votingSession"] {
+    const query = `*[_type == "sliderSession"] {
       _id,
-      userName,
-      instanceId,
-      instanceTitle,
-      sessionDate,
+      sessionId,
+      sliderInstance,
+      sliderTitle,
+      startTime,
       votes[]{
-        imagePairTitle,
-        imageUrl1,
-        imageUrl2,
-        selectedImage,
+        pairTitle,
+        leftSide,
+        rightSide,
+        selectedSide,
         timeSpent
       }
     }`
@@ -36,7 +36,7 @@ async function getAllVotingSessions() {
     const sessions = await client.fetch(query)
     return sessions || []
   } catch (error) {
-    console.error('Error fetching voting sessions:', error)
+    console.error('Error fetching slider sessions:', error)
     return []
   }
 }
