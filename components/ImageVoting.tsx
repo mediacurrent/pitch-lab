@@ -62,6 +62,33 @@ export function ImageVoting({
 
   const currentImage = images[currentIndex]
 
+  const handleVote = useCallback((selected: 'left' | 'right' | 'timeout') => {
+    if (!currentImage) return
+
+    const vote: Vote = {
+      imagePairTitle: currentImage.title,
+      imageUrl1: currentImage.imageUrl1,
+      imageUrl2: currentImage.imageUrl2,
+      selectedImage: selected,
+      timeSpent: timerLength - timeLeft
+    }
+
+    setVotes(prev => [...prev, vote])
+
+    // Move to next image or show summary
+    if (currentIndex < images.length - 1) {
+      setCurrentIndex(prev => prev + 1)
+      setTimeLeft(timerLength)
+      setIsActive(false)
+      setIsPaused(false)
+      setHasStarted(false)
+    } else {
+      // All images voted on
+      setShowSummary(true)
+      setIsActive(false)
+    }
+  }, [currentImage, timerLength, timeLeft, currentIndex, images.length])
+
   // Timer effect
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null
@@ -100,33 +127,6 @@ export function ImageVoting({
     setTimeLeft(timerLength)
     setHasStarted(false)
   }
-
-  const handleVote = useCallback((selected: 'left' | 'right' | 'timeout') => {
-    if (!currentImage) return
-
-    const vote: Vote = {
-      imagePairTitle: currentImage.title,
-      imageUrl1: currentImage.imageUrl1,
-      imageUrl2: currentImage.imageUrl2,
-      selectedImage: selected,
-      timeSpent: timerLength - timeLeft
-    }
-
-    setVotes(prev => [...prev, vote])
-
-    // Move to next image or show summary
-    if (currentIndex < images.length - 1) {
-      setCurrentIndex(prev => prev + 1)
-      setTimeLeft(timerLength)
-      setIsActive(false)
-      setIsPaused(false)
-      setHasStarted(false)
-    } else {
-      // All images voted on
-      setShowSummary(true)
-      setIsActive(false)
-    }
-  }, [currentImage, timerLength, timeLeft, currentIndex, images.length])
 
   const handleImageClick = (side: 'left' | 'right') => {
     if (!hasStarted) {
