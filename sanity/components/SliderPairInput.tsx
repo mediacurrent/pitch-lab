@@ -55,7 +55,7 @@ export default function SliderPairInput({ type, value, onChange }: SliderPairInp
           <Label>Pair Title *</Label>
           <TextInput
             value={formData.title}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, title: e.target.value })}
             placeholder="Enter pair title"
           />
         </Stack>
@@ -64,7 +64,7 @@ export default function SliderPairInput({ type, value, onChange }: SliderPairInp
           <Label>Left Side *</Label>
           <TextInput
             value={formData.leftSide}
-            onChange={(e) => setFormData({ ...formData, leftSide: e.target.value })}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, leftSide: e.target.value })}
             placeholder="Enter left side text"
           />
         </Stack>
@@ -73,7 +73,7 @@ export default function SliderPairInput({ type, value, onChange }: SliderPairInp
           <Label>Right Side *</Label>
           <TextInput
             value={formData.rightSide}
-            onChange={(e) => setFormData({ ...formData, rightSide: e.target.value })}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, rightSide: e.target.value })}
             placeholder="Enter right side text"
           />
         </Stack>

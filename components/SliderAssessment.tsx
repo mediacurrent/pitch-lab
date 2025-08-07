@@ -6,7 +6,7 @@ import { Card, CardContent } from './ui/card'
 import { SliderCard } from './SliderCard'
 import { SubmissionForm } from './SubmissionForm'
 import { RotateCcw, Send } from 'lucide-react'
-import { SliderInstance, saveSliderSession } from '@/lib/sanity'
+import { SliderInstance, saveSliderSession, SliderSessionData } from '@/lib/sanity'
 import { toast } from 'sonner'
 
 interface SliderAssessmentProps {
@@ -46,7 +46,7 @@ export default function SliderAssessment({ slider }: SliderAssessmentProps) {
     
     try {
       // Create session data for Sanity
-      const sessionData = {
+      const sessionData: SliderSessionData = {
         sessionId: `slider-${Date.now()}`,
         sliderId: slider.id,
         sliderTitle: slider.title,
