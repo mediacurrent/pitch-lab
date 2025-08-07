@@ -111,8 +111,8 @@ export default function SliderAssessment({ slider }: SliderAssessmentProps) {
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8 rounded-lg">
       <div className="max-w-7xl mx-auto">
-        {/* Header with buttons */}
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
+        {/* Header */}
+        <div className="mb-8">
           <div>
             <h1 className="text-2xl md:text-3xl font-medium text-gray-900 mb-2">
               {slider.title}
@@ -120,23 +120,6 @@ export default function SliderAssessment({ slider }: SliderAssessmentProps) {
             {slider.description && (
               <p className="text-gray-600">{slider.description}</p>
             )}
-          </div>
-          
-          <div className="flex items-center gap-2 flex-wrap">
-            <Button
-              onClick={handleReset}
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <RotateCcw className="h-4 w-4" />
-              Reset All
-            </Button>
-
-            <SubmissionForm 
-              sliderValues={sliderValues}
-              sliderData={slider.sliderPairs}
-              onSubmit={handleSubmissionComplete}
-            />
           </div>
         </div>
 
@@ -156,6 +139,7 @@ export default function SliderAssessment({ slider }: SliderAssessmentProps) {
           </div>
         </div>
 
+        {/* Slider Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {slider.sliderPairs.map((pair, index) => (
             <SliderCard
@@ -170,6 +154,24 @@ export default function SliderAssessment({ slider }: SliderAssessmentProps) {
               onValueChange={(value) => handleSliderChange(index, value)}
             />
           ))}
+        </div>
+
+        {/* Bottom Actions */}
+        <div className="flex justify-between items-center">
+          <Button
+            onClick={handleReset}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <RotateCcw className="h-4 w-4" />
+            Reset All
+          </Button>
+
+          <SubmissionForm 
+            sliderValues={sliderValues}
+            sliderData={slider.sliderPairs}
+            onSubmit={handleSubmissionComplete}
+          />
         </div>
       </div>
     </div>
