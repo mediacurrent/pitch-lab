@@ -34,6 +34,7 @@ export default defineType({
       of: [
         {
           type: 'object',
+          name: 'sliderPair',
           fields: [
             {
               name: 'title',
@@ -53,9 +54,7 @@ export default defineType({
               type: 'string',
               validation: (Rule) => Rule.required().min(1).max(100),
             },
-
           ],
-
           preview: {
             select: {
               title: 'title',
