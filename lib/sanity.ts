@@ -127,6 +127,23 @@ export interface ThisOrThatInstance {
   imagePairs: ImagePairEntry[]
 }
 
+// New interfaces for Slider instances
+export interface SliderPairEntry {
+  title: string
+  leftSide: string
+  rightSide: string
+}
+
+export interface SliderInstance {
+  id: string
+  title: string
+  description?: string
+  slug: string
+  isActive: boolean
+  createdBy: string
+  sliderPairs: SliderPairEntry[]
+}
+
 // Fetch all active Pitch Lab
 export async function getAllInstances(): Promise<ThisOrThatInstance[]> {
   if (!client) {
@@ -301,6 +318,182 @@ export async function getVotingSessionsForInstance(instanceId: string): Promise<
     return sessions || []
   } catch (error) {
     console.error('Error fetching voting sessions from Sanity:', error)
+    return []
+  }
+}
+
+// Fetch all active Sliders
+export async function getAllSliders(): Promise<SliderInstance[]> {
+  if (!client) {
+    console.error('Sanity client not configured')
+    return []
+  }
+  
+  try {
+    const query = `*[_type == "sliderInstance" && isActive == true] {
+      _id,
+      title,
+      description,
+      "slug": slug.current,
+      isActive,
+      createdBy,
+      sliderPairs[]{
+        title,
+        leftSide,
+        rightSide
+      }
+    } | order(_createdAt desc)`
+
+    const sliders = await client.fetch(query)
+    
+    return sliders.map((slider: any) => ({
+      id: slider._id,
+      title: slider.title || '',
+      description: slider.description || '',
+      slug: slider.slug || '',
+      isActive: slider.isActive || false,
+      createdBy: slider.createdBy || 'Unknown',
+      sliderPairs: (slider.sliderPairs || []).map((pair: any) => ({
+        title: pair.title || '',
+        leftSide: pair.leftSide || '',
+        rightSide: pair.rightSide || '',
+      })),
+    }))
+  } catch (error) {
+    console.error('Error fetching sliders from Sanity:', error)
+    return []
+  }
+}
+
+// Fetch a specific Slider by slug
+export async function getSliderBySlug(slug: string): Promise<SliderInstance | null> {
+  if (!client) {
+    console.error('Sanity client not configured')
+    return null
+  }
+  
+  try {
+    const query = `*[_type == "sliderInstance" && slug.current == $slug && isActive == true][0] {
+      _id,
+      title,
+      description,
+      "slug": slug.current,
+      isActive,
+      createdBy,
+      sliderPairs[]{
+        title,
+        leftSide,
+        rightSide
+      }
+    }`
+
+    const slider = await client.fetch(query, { slug })
+
+    if (!slider) return null
+
+    return {
+      id: slider._id,
+      title: slider.title || '',
+      description: slider.description || '',
+      slug: slider.slug || '',
+      isActive: slider.isActive || false,
+      createdBy: slider.createdBy || 'Unknown',
+      sliderPairs: (slider.sliderPairs || []).map((pair: any) => ({
+        title: pair.title || '',
+        leftSide: pair.leftSide || '',
+        rightSide: pair.rightSide || '',
+      })),
+    }
+  } catch (error) {
+    console.error('Error fetching slider by slug from Sanity:', error)
+    return null
+  }
+}
+
+// Interface for slider session data
+export interface SliderSessionData {
+  sessionId: string
+  sliderId: string
+  sliderTitle: string
+  votes: {
+    pairTitle: string
+    leftSide: string
+    rightSide: string
+    selectedSide: 'left' | 'right'
+    timeSpent: number
+  }[]
+  summary: {
+    totalVotes: number
+    leftVotes: number
+    rightVotes: number
+    averageTimePerVote: number
+  }
+}
+
+// Save a slider session to Sanity
+export async function saveSliderSession(sessionData: SliderSessionData): Promise<string | null> {
+  if (!client) {
+    console.error('Sanity client not configured')
+    return null
+  }
+  
+  try {
+    const doc = {
+      _type: 'sliderSession',
+      sessionId: sessionData.sessionId,
+      sliderInstance: {
+        _type: 'reference',
+        _ref: sessionData.sliderId,
+      },
+      startTime: new Date().toISOString(),
+      status: 'completed',
+      votes: sessionData.votes.map(vote => ({
+        pairTitle: vote.pairTitle,
+        leftSide: vote.leftSide,
+        rightSide: vote.rightSide,
+        selectedSide: vote.selectedSide,
+        timestamp: new Date().toISOString(),
+        timeSpent: vote.timeSpent,
+      })),
+      metadata: {
+        totalPairs: sessionData.votes.length,
+        completedPairs: sessionData.votes.length,
+      },
+    }
+
+    const result = await client.create(doc)
+    return result._id
+  } catch (error) {
+    console.error('Error saving slider session to Sanity:', error)
+    return null
+  }
+}
+
+// Fetch slider sessions for a specific slider
+export async function getSliderSessionsForInstance(sliderId: string): Promise<any[]> {
+  if (!client) {
+    console.error('Sanity client not configured')
+    return []
+  }
+  
+  try {
+    const query = `*[_type == "sliderSession" && sliderInstance._ref == $sliderId] | order(startTime desc) {
+      _id,
+      sessionId,
+      startTime,
+      status,
+      votes[]{
+        pairTitle,
+        selectedSide,
+        timeSpent
+      },
+      metadata
+    }`
+
+    const sessions = await client.fetch(query, { sliderId })
+    return sessions || []
+  } catch (error) {
+    console.error('Error fetching slider sessions from Sanity:', error)
     return []
   }
 } 
