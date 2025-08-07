@@ -109,7 +109,7 @@ export default function SliderAssessment({ slider }: SliderAssessmentProps) {
 
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8 rounded-lg">
       <div className="max-w-7xl mx-auto">
         {/* Header with buttons */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
