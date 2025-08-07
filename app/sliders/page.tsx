@@ -2,15 +2,27 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { getAllSliders } from '@/lib/sanity'
+import Image from 'next/image'
 
 export default async function SlidersPage() {
   const sliders = await getAllSliders()
 
   return (
     <div className="container mx-auto py-8">
+      {/* Logo and Header */}
+      <div className="flex items-center justify-center mb-8">
+        <Image 
+          src="/logo.svg" 
+          alt="PitchLab Logo" 
+          width={120} 
+          height={40}
+          className="mb-4"
+        />
+      </div>
+      
       <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">Sliders</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-4xl font-bold mb-2 text-center">Sliders</h1>
+        <p className="text-muted-foreground text-center">
           Choose from our collection of slider voting experiences
         </p>
       </div>
