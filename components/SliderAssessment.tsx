@@ -5,7 +5,7 @@ import { Button } from './ui/button'
 import { Card, CardContent } from './ui/card'
 import { SliderCard } from './SliderCard'
 import { SubmissionForm } from './SubmissionForm'
-import { RotateCcw, Send } from 'lucide-react'
+import { RotateCcw, Send, X } from 'lucide-react'
 import { SliderInstance, saveSliderSession, SliderSessionData } from '@/lib/sanity'
 import { toast } from 'sonner'
 
@@ -21,6 +21,9 @@ export default function SliderAssessment({ slider }: SliderAssessmentProps) {
 
   // State to control summary visibility
   const [showSummary, setShowSummary] = useState(false)
+
+  // State to control instructions visibility
+  const [showInstructions, setShowInstructions] = useState(true)
 
   // Ref for the summary section to enable scrolling
   const summaryRef = useRef<HTMLDivElement>(null)
@@ -113,31 +116,53 @@ export default function SliderAssessment({ slider }: SliderAssessmentProps) {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-medium text-gray-900 mb-2">
-              {slider.title}
-            </h1>
-            {slider.description && (
-              <p className="text-gray-600">{slider.description}</p>
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-medium text-gray-900 mb-2">
+                {slider.title}
+              </h1>
+              {slider.description && (
+                <p className="text-gray-600">{slider.description}</p>
+              )}
+            </div>
+            {!showInstructions && (
+              <Button
+                onClick={() => setShowInstructions(true)}
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <Send className="h-4 w-4" />
+                Show Instructions
+              </Button>
             )}
           </div>
         </div>
 
         {/* Instructions */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <div className="flex items-start gap-3">
-            <div className="bg-blue-100 p-2 rounded-lg">
-              <Send className="h-5 w-5 text-blue-600" />
-            </div>
-            <div>
-              <h3 className="font-medium text-blue-900 mb-1">How to Complete This Assessment</h3>
-              <ol className="text-sm text-blue-800 space-y-1 list-decimal list-inside">
-                <li>Review each criterion below and drag the sliders based on your preferences</li>
-                <li>Click &quot;Submit Assessment&quot; to securely save your responses for analysis</li>
-              </ol>
+        {showInstructions && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 relative">
+            <button
+              onClick={() => setShowInstructions(false)}
+              className="absolute top-2 right-2 p-1 hover:bg-blue-100 rounded-md transition-colors"
+              aria-label="Dismiss instructions"
+            >
+              <X className="h-4 w-4 text-blue-600" />
+            </button>
+            <div className="flex items-start gap-3 pr-6">
+              <div className="bg-blue-100 p-2 rounded-lg">
+                <Send className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="font-medium text-blue-900 mb-1">How to Complete This Assessment</h3>
+                <ol className="text-sm text-blue-800 space-y-1 list-decimal list-inside">
+                  <li>Review each criterion below and drag the sliders based on your preferences</li>
+                  <li>Click &quot;Submit Assessment&quot; to securely save your responses for analysis</li>
+                </ol>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Slider Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
