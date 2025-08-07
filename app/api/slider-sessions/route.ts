@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { saveSliderSession } from '@/lib/sanity'
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: NextRequest) {
   try {
     const sessionData = await request.json()
