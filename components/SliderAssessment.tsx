@@ -54,7 +54,7 @@ export default function SliderAssessment({ slider }: SliderAssessmentProps) {
           pairTitle: pair.title,
           leftSide: pair.leftSide,
           rightSide: pair.rightSide,
-          selectedSide: sliderValues[index] <= 25 ? 'left' : sliderValues[index] >= 75 ? 'right' : 'neutral',
+          selectedSide: sliderValues[index] <= 50 ? 'left' : 'right',
           timeSpent: 0, // We don't track time for sliders
         })),
         summary: {
