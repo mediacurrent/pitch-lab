@@ -82,7 +82,7 @@ export function ImageVoting({
     return () => {
       if (interval) clearInterval(interval)
     }
-  }, [isActive, isPaused, timeLeft])
+  }, [isActive, isPaused, timeLeft, handleVote])
 
   const startTimer = useCallback(() => {
     setIsActive(true)
@@ -101,7 +101,7 @@ export function ImageVoting({
     setHasStarted(false)
   }
 
-  const handleVote = (selected: 'left' | 'right' | 'timeout') => {
+  const handleVote = useCallback((selected: 'left' | 'right' | 'timeout') => {
     if (!currentImage) return
 
     const vote: Vote = {
@@ -126,7 +126,7 @@ export function ImageVoting({
       setShowSummary(true)
       setIsActive(false)
     }
-  }
+  }, [currentImage, timerLength, timeLeft, currentIndex, images.length])
 
   const handleImageClick = (side: 'left' | 'right') => {
     if (!hasStarted) {

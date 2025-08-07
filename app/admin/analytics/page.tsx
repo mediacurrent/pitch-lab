@@ -1,7 +1,7 @@
 import { getAllSliders, getSliderSessionsForInstance } from '@/lib/sanity'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { BarChart3, TrendingUp, Clock, Users, Filter } from 'lucide-react'
+import { BarChart3, TrendingUp, Clock, Users, Filter, Target } from 'lucide-react'
 
 // Force dynamic rendering to avoid build-time Sanity client creation
 export const dynamic = 'force-dynamic'
@@ -42,94 +42,74 @@ async function getAllSliderSessions() {
 }
 
 export default async function AnalyticsPage() {
-  const sessions = await getAllVotingSessions()
+  const sessions = await getAllSliderSessions()
   
-  // Analyze image voting patterns
-  const imageStats = new Map()
+  // Analyze slider assessment patterns
+  const sliderStats = new Map()
   
   sessions.forEach((session: any) => {
     session.votes?.forEach((vote: any) => {
-      const image1Key = vote.imageUrl1
-      const image2Key = vote.imageUrl2
+      const pairKey = vote.pairTitle
       
-      // Initialize stats for image 1
-      if (!imageStats.has(image1Key)) {
-        imageStats.set(image1Key, {
-          url: vote.imageUrl1,
-          title: vote.imagePairTitle,
-          wins: 0,
-          losses: 0,
-          totalAppearances: 0,
+      // Initialize stats for slider pair
+      if (!sliderStats.has(pairKey)) {
+        sliderStats.set(pairKey, {
+          title: vote.pairTitle,
+          leftSide: vote.leftSide,
+          rightSide: vote.rightSide,
+          leftVotes: 0,
+          rightVotes: 0,
+          totalVotes: 0,
           avgTimeSpent: 0,
           timeSpentTotal: 0,
           timeSpentCount: 0
         })
       }
       
-      // Initialize stats for image 2
-      if (!imageStats.has(image2Key)) {
-        imageStats.set(image2Key, {
-          url: vote.imageUrl2,
-          title: vote.imagePairTitle,
-          wins: 0,
-          losses: 0,
-          totalAppearances: 0,
-          avgTimeSpent: 0,
-          timeSpentTotal: 0,
-          timeSpentCount: 0
-        })
-      }
+      const pairStats = sliderStats.get(pairKey)
       
-      const image1Stats = imageStats.get(image1Key)
-      const image2Stats = imageStats.get(image2Key)
+      // Increment total votes
+      pairStats.totalVotes++
       
-      // Increment appearances
-      image1Stats.totalAppearances++
-      image2Stats.totalAppearances++
-      
-      // Track wins/losses
-      if (vote.selectedImage === 'left') {
-        image1Stats.wins++
-        image2Stats.losses++
-      } else if (vote.selectedImage === 'right') {
-        image2Stats.wins++
-        image1Stats.losses++
+      // Track left/right preferences
+      if (vote.selectedSide === 'left') {
+        pairStats.leftVotes++
+      } else if (vote.selectedSide === 'right') {
+        pairStats.rightVotes++
       }
       
       // Track time spent
       if (vote.timeSpent) {
-        image1Stats.timeSpentTotal += vote.timeSpent
-        image1Stats.timeSpentCount++
-        image2Stats.timeSpentTotal += vote.timeSpent
-        image2Stats.timeSpentCount++
+        pairStats.timeSpentTotal += vote.timeSpent
+        pairStats.timeSpentCount++
       }
     })
   })
   
   // Calculate averages and convert to array
-  const imageStatsArray = Array.from(imageStats.values()).map(stats => ({
+  const sliderStatsArray = Array.from(sliderStats.values()).map(stats => ({
     ...stats,
-    winRate: stats.totalAppearances > 0 ? (stats.wins / stats.totalAppearances * 100).toFixed(1) : 0,
+    leftPreferenceRate: stats.totalVotes > 0 ? (stats.leftVotes / stats.totalVotes * 100).toFixed(1) : 0,
     avgTimeSpent: stats.timeSpentCount > 0 ? (stats.timeSpentTotal / stats.timeSpentCount).toFixed(1) : 0
   }))
   
-  // Sort by win rate
-  imageStatsArray.sort((a, b) => parseFloat(b.winRate) - parseFloat(a.winRate))
+  // Sort by total votes
+  sliderStatsArray.sort((a, b) => b.totalVotes - a.totalVotes)
   
   // Overall stats
   const totalVotes = sessions.reduce((sum: number, session: any) => sum + (session.votes?.length || 0), 0)
   const totalSessions = sessions.length
-  const uniqueImages = imageStats.size
-  const avgWinRate = imageStatsArray.length > 0 
-    ? (imageStatsArray.reduce((sum, img) => sum + parseFloat(img.winRate), 0) / imageStatsArray.length).toFixed(1)
+  const uniquePairs = sliderStats.size
+  const avgLeftPreference = sliderStatsArray.length > 0 
+    ? (sliderStatsArray.reduce((sum, pair) => sum + parseFloat(pair.leftPreferenceRate), 0) / sliderStatsArray.length).toFixed(1)
     : 0
 
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Image Analytics</h1>
+        <h1 className="text-3xl font-bold mb-2">Slider Analytics</h1>
         <p className="text-muted-foreground">
-          Detailed insights into image voting patterns and performance
+          Detailed insights into slider assessment patterns and preferences
         </p>
       </div>
 
@@ -149,8 +129,8 @@ export default async function AnalyticsPage() {
           <div className="flex items-center space-x-2">
             <Target className="h-5 w-5 text-green-600" />
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Unique Images</p>
-              <p className="text-2xl font-bold">{uniqueImages}</p>
+              <p className="text-sm font-medium text-muted-foreground">Unique Pairs</p>
+              <p className="text-2xl font-bold">{uniquePairs}</p>
             </div>
           </div>
         </Card>
@@ -159,8 +139,8 @@ export default async function AnalyticsPage() {
           <div className="flex items-center space-x-2">
             <TrendingUp className="h-5 w-5 text-purple-600" />
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Avg Win Rate</p>
-              <p className="text-2xl font-bold">{avgWinRate}%</p>
+              <p className="text-sm font-medium text-muted-foreground">Avg Left Preference</p>
+              <p className="text-2xl font-bold">{avgLeftPreference}%</p>
             </div>
           </div>
         </Card>
@@ -176,50 +156,51 @@ export default async function AnalyticsPage() {
         </Card>
       </div>
 
-      {/* Image Performance */}
+      {/* Slider Performance */}
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Image Performance</h2>
+        <h2 className="text-xl font-semibold">Slider Pair Performance</h2>
         
-        {imageStatsArray.length === 0 ? (
+        {sliderStatsArray.length === 0 ? (
           <Card className="p-8 text-center">
-            <p className="text-muted-foreground">No image data available yet.</p>
+            <p className="text-muted-foreground">No slider data available yet.</p>
             <p className="text-sm text-muted-foreground mt-2">
-              Image analytics will appear here once users complete voting sessions.
+              Slider analytics will appear here once users complete assessments.
             </p>
           </Card>
         ) : (
           <div className="grid gap-4">
-            {imageStatsArray.slice(0, 20).map((image, index) => (
-              <Card key={image.url} className="p-6">
+            {sliderStatsArray.slice(0, 20).map((pair, index) => (
+              <Card key={pair.title} className="p-6">
                 <div className="flex items-center space-x-4">
                   <div className="flex-shrink-0">
-                    <img 
-                      src={image.url} 
-                      alt={image.title}
-                      className="w-16 h-16 object-cover rounded-lg"
-                    />
+                    <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
+                      <Filter className="h-8 w-8 text-gray-400" />
+                    </div>
                   </div>
                   
                   <div className="flex-1">
-                    <h3 className="font-semibold">{image.title}</h3>
+                    <h3 className="font-semibold">{pair.title}</h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2 text-sm">
                       <div>
-                        <span className="font-medium">Win Rate:</span> {image.winRate}%
+                        <span className="font-medium">Left Preference:</span> {pair.leftPreferenceRate}%
                       </div>
                       <div>
-                        <span className="font-medium">Wins:</span> {image.wins}/{image.totalAppearances}
+                        <span className="font-medium">Left Votes:</span> {pair.leftVotes}/{pair.totalVotes}
                       </div>
                       <div>
-                        <span className="font-medium">Appearances:</span> {image.totalAppearances}
+                        <span className="font-medium">Total Votes:</span> {pair.totalVotes}
                       </div>
                       <div>
-                        <span className="font-medium">Avg Time:</span> {image.avgTimeSpent}s
+                        <span className="font-medium">Avg Time:</span> {pair.avgTimeSpent}s
                       </div>
+                    </div>
+                    <div className="mt-2 text-xs text-gray-500">
+                      <span className="font-medium">Left:</span> {pair.leftSide} | <span className="font-medium">Right:</span> {pair.rightSide}
                     </div>
                   </div>
                   
                   <div className="flex-shrink-0">
-                    <Badge variant={parseFloat(image.winRate) > 50 ? "default" : "secondary"}>
+                    <Badge variant={parseFloat(pair.leftPreferenceRate) > 50 ? "default" : "secondary"}>
                       #{index + 1}
                     </Badge>
                   </div>
