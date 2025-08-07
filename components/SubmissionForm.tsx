@@ -21,9 +21,7 @@ export function SubmissionForm({ sliderValues, sliderData, onSubmit }: Submissio
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    comments: ''
+    name: ''
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -34,8 +32,6 @@ export function SubmissionForm({ sliderValues, sliderData, onSubmit }: Submissio
       const submission = {
         timestamp: new Date().toISOString(),
         name: formData.name || 'Anonymous',
-        email: formData.email || '',
-        comments: formData.comments || '',
         responses: sliderData.map((slider, index) => ({
           title: slider.title,
           leftSide: slider.leftSide,
@@ -55,7 +51,7 @@ export function SubmissionForm({ sliderValues, sliderData, onSubmit }: Submissio
       await onSubmit(submission)
       
       // Reset form
-      setFormData({ name: '', email: '', comments: '' })
+      setFormData({ name: '' })
       setShowForm(false)
     } catch (error) {
       console.error('Submission failed:', error)
@@ -91,34 +87,6 @@ export function SubmissionForm({ sliderValues, sliderData, onSubmit }: Submissio
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Your name"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                  Email (optional)
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="your.email@example.com"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="comments" className="block text-sm font-medium text-gray-700 mb-1">
-                  Comments (optional)
-                </label>
-                <textarea
-                  id="comments"
-                  value={formData.comments}
-                  onChange={(e) => setFormData({ ...formData, comments: e.target.value })}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Any additional thoughts or feedback..."
                 />
               </div>
 
