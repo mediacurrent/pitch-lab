@@ -2,7 +2,7 @@ import { defineType, defineField } from 'sanity'
 
 export default defineType({
   name: 'thisOrThatInstance',
-  title: 'Pitch Lab',
+  title: 'This or That',
   type: 'document',
   fields: [
     defineField({
