@@ -61,6 +61,7 @@ export function ImageVoting({
   const [showSummary, setShowSummary] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
   const [hasStarted, setHasStarted] = useState(false)
+  const [userName, setUserName] = useState('')
 
   // Ref to store the timeout handler
   const timeoutHandlerRef = useRef<(() => void) | null>(null)
@@ -175,6 +176,7 @@ export function ImageVoting({
     setIsPaused(false)
     setTimeLeft(timerLength)
     setHasStarted(false)
+    setUserName('')
   }
 
   const handleImageClick = (side: 'left' | 'right') => {
@@ -192,7 +194,7 @@ export function ImageVoting({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userName: 'Anonymous',
+          userName: userName || 'Anonymous',
           instanceId,
           instanceTitle,
           votes,
@@ -264,6 +266,23 @@ export function ImageVoting({
               </div>
             </div>
 
+            {/* Name Input */}
+            <div className="mb-8">
+              <div className="max-w-md mx-auto">
+                <label htmlFor="userName" className="block text-sm font-medium text-gray-700 mb-2">
+                  Your Name (Optional)
+                </label>
+                <input
+                  type="text"
+                  id="userName"
+                  value={userName}
+                  onChange={(e) => setUserName(e.target.value)}
+                  placeholder="Enter your name or leave blank for anonymous"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            </div>
+
             <div className="flex gap-4 justify-center">
               <Button onClick={handleSubmit} className="bg-blue-600 hover:bg-blue-700">
                 Save Results
@@ -311,7 +330,7 @@ export function ImageVoting({
             </div>
           </div>
 
-          {/* Timer Controls - Right side under badges */}
+        {/* Timer Controls - Right side under badges */}
           <div className="flex justify-end mb-8">
             {hasStarted && (
               <div className="flex items-center gap-2">
