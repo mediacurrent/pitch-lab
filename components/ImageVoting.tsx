@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -52,6 +52,8 @@ export function ImageVoting({
   instanceDescription,
   instanceId
 }: ImageVotingProps) {
+  console.log('ImageVoting render:', { timerLength, imagesLength: images.length })
+  
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isActive, setIsActive] = useState(false)
   const [timeLeft, setTimeLeft] = useState(timerLength)
@@ -59,6 +61,9 @@ export function ImageVoting({
   const [showSummary, setShowSummary] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
   const [hasStarted, setHasStarted] = useState(false)
+
+  // Ref to store the timeout handler
+  const timeoutHandlerRef = useRef<(() => void) | null>(null)
 
   const currentImage = images[currentIndex]
 
@@ -79,26 +84,61 @@ export function ImageVoting({
     if (currentIndex < images.length - 1) {
       setCurrentIndex(prev => prev + 1)
       setTimeLeft(timerLength)
-      setIsActive(false)
-      setIsPaused(false)
-      setHasStarted(false)
+      // Simple approach: keep timer running if it was started
+      if (hasStarted) {
+        setIsActive(true)
+      }
     } else {
       // All images voted on
       setShowSummary(true)
       setIsActive(false)
     }
-  }, [currentImage, timerLength, timeLeft, currentIndex, images.length])
+  }, [currentImage, timerLength, timeLeft, currentIndex, images.length, hasStarted])
+
+  // Handle timeout separately to avoid circular dependency
+  const handleTimeout = useCallback(() => {
+    if (!currentImage) return
+
+    const vote: Vote = {
+      imagePairTitle: currentImage.title,
+      imageUrl1: currentImage.imageUrl1,
+      imageUrl2: currentImage.imageUrl2,
+      selectedImage: 'timeout',
+      timeSpent: timerLength
+    }
+
+    setVotes(prev => [...prev, vote])
+
+    // Move to next image or show summary
+    if (currentIndex < images.length - 1) {
+      setCurrentIndex(prev => prev + 1)
+      setTimeLeft(timerLength)
+      // Simple approach: keep timer running if it was started
+      if (hasStarted) {
+        setIsActive(true)
+      }
+    } else {
+      // All images voted on
+      setShowSummary(true)
+      setIsActive(false)
+    }
+  }, [currentImage, timerLength, currentIndex, images.length, hasStarted])
 
   // Timer effect
   useEffect(() => {
+    console.log('Timer effect running:', { isActive, isPaused, timeLeft })
     let interval: NodeJS.Timeout | null = null
 
     if (isActive && !isPaused && timeLeft > 0) {
+      console.log('Starting timer interval')
       interval = setInterval(() => {
         setTimeLeft((prev) => {
+          console.log('Timer tick:', prev)
           if (prev <= 1) {
             // Time's up - record timeout
-            handleVote('timeout')
+            if (timeoutHandlerRef.current) {
+              timeoutHandlerRef.current()
+            }
             return 0
           }
           return prev - 1
@@ -107,11 +147,20 @@ export function ImageVoting({
     }
 
     return () => {
-      if (interval) clearInterval(interval)
+      if (interval) {
+        console.log('Clearing timer interval')
+        clearInterval(interval)
+      }
     }
-  }, [isActive, isPaused, timeLeft, handleVote])
+  }, [isActive, isPaused, timeLeft])
+
+  // Update the timeout handler ref when handleTimeout changes
+  useEffect(() => {
+    timeoutHandlerRef.current = handleTimeout
+  }, [handleTimeout])
 
   const startTimer = useCallback(() => {
+    console.log('startTimer called, setting timer states')
     setIsActive(true)
     setHasStarted(true)
     setTimeLeft(timerLength)
@@ -262,113 +311,171 @@ export function ImageVoting({
             </div>
           </div>
 
-          {/* Progress Bar */}
-          <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
-            <div 
-              className="bg-blue-600 h-2 rounded-full transition-all duration-1000"
-              style={{ width: `${((timerLength - timeLeft) / timerLength) * 100}%` }}
-            />
+          {/* Timer Controls - Right side under badges */}
+          <div className="flex justify-end mb-8">
+            {hasStarted && (
+              <div className="flex items-center gap-2">
+                <Button 
+                  onClick={pauseTimer} 
+                  variant={isPaused ? "default" : "outline"}
+                  disabled={!isActive}
+                  size="sm"
+                >
+                  {isPaused ? <Play className="h-4 w-4 mr-2" /> : <Pause className="h-4 w-4 mr-2" />}
+                  {isPaused ? 'Resume' : 'Pause'}
+                </Button>
+                <Button onClick={resetTimer} variant="outline" size="sm">
+                  <RotateCcw className="h-4 w-4 mr-2" />
+                  Reset
+                </Button>
+              </div>
+            )}
           </div>
 
-          {/* Timer Controls */}
+          {/* Timer Controls - Center */}
           <div className="flex justify-center gap-4 mb-8">
             {!hasStarted ? (
               <Button onClick={startTimer} className="bg-green-600 hover:bg-green-700">
                 <Play className="h-4 w-4 mr-2" />
                 Start Voting
               </Button>
-            ) : (
-              <>
-                <Button 
-                  onClick={pauseTimer} 
-                  variant={isPaused ? "default" : "outline"}
-                  disabled={!isActive}
-                >
-                  {isPaused ? <Play className="h-4 w-4 mr-2" /> : <Pause className="h-4 w-4 mr-2" />}
-                  {isPaused ? 'Resume' : 'Pause'}
-                </Button>
-                <Button onClick={resetTimer} variant="outline">
-                  <RotateCcw className="h-4 w-4 mr-2" />
-                  Reset
-                </Button>
-              </>
-            )}
+            ) : null}
           </div>
-        </div>
 
-        {/* Image Pair */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-          <Card 
-            className="cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg"
-            onClick={() => handleImageClick('left')}
-          >
-            <CardContent className="p-0">
-              <div className="aspect-square relative overflow-hidden rounded-t-lg">
-                <img
-                  src={currentImage.imageUrl1}
-                  alt={currentImage.metadata?.altText1 || 'Left image'}
-                  className="w-full h-full object-cover"
+          {/* Circular Timer */}
+          <div className="flex justify-center mb-8">
+            <div className="relative w-20 h-20">
+              {/* Background circle */}
+              <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 100 100">
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="45"
+                  fill="none"
+                  stroke="#e5e7eb"
+                  strokeWidth="2"
                 />
-                <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-200" />
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-semibold mb-2">This</h3>
-                <p className="text-gray-600">Click to vote for this option</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card 
-            className="cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg"
-            onClick={() => handleImageClick('right')}
-          >
-            <CardContent className="p-0">
-              <div className="aspect-square relative overflow-hidden rounded-t-lg">
-                <img
-                  src={currentImage.imageUrl2}
-                  alt={currentImage.metadata?.altText2 || 'Right image'}
-                  className="w-full h-full object-cover"
+                {/* Progress circle */}
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="45"
+                  fill="none"
+                  stroke="#3b82f6"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeDasharray={`${2 * Math.PI * 45}`}
+                  strokeDashoffset={`${2 * Math.PI * 45 * (1 - (timerLength - timeLeft) / timerLength)}`}
+                  className="transition-all duration-1000 ease-linear"
                 />
-                <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-200" />
+              </svg>
+              {/* Time display in center */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="text-lg font-bold text-gray-800">
+                    {formatTime(timeLeft)}
+                  </div>
+                </div>
               </div>
-              <div className="p-6">
-                <h3 className="text-xl font-semibold mb-2">That</h3>
-                <p className="text-gray-600">Click to vote for this option</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </div>
 
-        {/* Navigation */}
-        <div className="flex justify-between items-center">
-          <Button
-            variant="outline"
-            onClick={() => setCurrentIndex(prev => Math.max(0, prev - 1))}
-            disabled={currentIndex === 0}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Previous
-          </Button>
+          {/* Navigation */}
+          <div className="flex justify-between items-center mb-8">
+            <Button
+              variant="outline"
+              onClick={() => setCurrentIndex(prev => Math.max(0, prev - 1))}
+              disabled={currentIndex === 0}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Previous
+            </Button>
 
-          <div className="text-center">
-            <p className="text-sm text-gray-600">
-              {currentImage.title}
-            </p>
-            {currentImage.metadata?.credit && (
-              <p className="text-xs text-gray-500">
-                Credit: {currentImage.metadata.credit}
+            <div className="text-center">
+              <p className="text-sm text-gray-600">
+                {currentImage.title}
               </p>
-            )}
+              {currentImage.metadata?.credit && (
+                <p className="text-xs text-gray-500">
+                  Credit: {currentImage.metadata.credit}
+                </p>
+              )}
+            </div>
+
+            <Button
+              variant="outline"
+              onClick={() => setCurrentIndex(prev => Math.min(images.length - 1, prev + 1))}
+              disabled={currentIndex === images.length - 1}
+            >
+              Next
+              <ArrowRight className="h-4 w-4 ml-2" />
+            </Button>
           </div>
 
-          <Button
-            variant="outline"
-            onClick={() => setCurrentIndex(prev => Math.min(images.length - 1, prev + 1))}
-            disabled={currentIndex === images.length - 1}
-          >
-            Next
-            <ArrowRight className="h-4 w-4 ml-2" />
-          </Button>
+          {/* Image Pair */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <Card 
+              className="cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg overflow-hidden"
+              onClick={() => handleImageClick('left')}
+            >
+              <CardContent className="p-0">
+                <div className="relative overflow-hidden rounded-t-lg bg-gray-50">
+                  <div className="min-h-64 flex items-center justify-center p-4">
+                    <img
+                      src={currentImage.imageUrl1}
+                      alt={currentImage.metadata?.altText1 || 'Left image'}
+                      className="w-full h-auto max-h-80 object-contain rounded"
+                      style={{ maxWidth: '100%' }}
+                      loading="eager"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        target.nextElementSibling?.classList.remove('hidden');
+                      }}
+                    />
+                    <div className="hidden text-gray-500 text-center">
+                      <p>Image failed to load</p>
+                    </div>
+                  </div>
+                  <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-200" />
+                </div>
+                <div className="p-4">
+                  <h3 className="text-xl font-semibold mb-2">This</h3>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card 
+              className="cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg overflow-hidden"
+              onClick={() => handleImageClick('right')}
+            >
+              <CardContent className="p-0">
+                <div className="relative overflow-hidden rounded-t-lg bg-gray-50">
+                  <div className="min-h-64 flex items-center justify-center p-4">
+                    <img
+                      src={currentImage.imageUrl2}
+                      alt={currentImage.metadata?.altText2 || 'Right image'}
+                      className="w-full h-auto max-h-80 object-contain rounded"
+                      style={{ maxWidth: '100%' }}
+                      loading="eager"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        target.nextElementSibling?.classList.remove('hidden');
+                      }}
+                    />
+                    <div className="hidden text-gray-500 text-center">
+                      <p>Image failed to load</p>
+                    </div>
+                  </div>
+                  <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-200" />
+                </div>
+                <div className="p-4">
+                  <h3 className="text-xl font-semibold mb-2">That</h3>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </div>

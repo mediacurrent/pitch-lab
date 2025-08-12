@@ -29,7 +29,8 @@ export async function POST(request: NextRequest) {
       },
       startTime: new Date().toISOString(),
       status: 'completed',
-      votes: sessionData.votes.map((vote: any) => ({
+      votes: sessionData.votes.map((vote: any, index: number) => ({
+        _key: `vote_${index}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         pairTitle: vote.pairTitle,
         leftSide: vote.leftSide,
         rightSide: vote.rightSide,
