@@ -238,7 +238,6 @@ export function ImageVoting({
             <div className="text-center mb-8">
               <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
               <h1 className="text-3xl font-bold mb-2">Voting Complete!</h1>
-              <p className="text-gray-600">Thank you for participating in this voting session.</p>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -250,13 +249,13 @@ export function ImageVoting({
                 <div className="text-2xl font-bold text-green-600">
                   {votes.filter(v => v.selectedImage === 'left').length}
                 </div>
-                <div className="text-sm text-gray-600">Left Choices</div>
+                <div className="text-sm text-gray-600">This</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-purple-600">
                   {votes.filter(v => v.selectedImage === 'right').length}
                 </div>
-                <div className="text-sm text-gray-600">Right Choices</div>
+                <div className="text-sm text-gray-600">That</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-orange-600">
@@ -270,25 +269,25 @@ export function ImageVoting({
             <div className="mb-8">
               <div className="max-w-md mx-auto">
                 <label htmlFor="userName" className="block text-sm font-medium text-gray-700 mb-2">
-                  Your Name (Optional)
+                  Your Name
                 </label>
                 <input
                   type="text"
                   id="userName"
                   value={userName}
                   onChange={(e) => setUserName(e.target.value)}
-                  placeholder="Enter your name or leave blank for anonymous"
+                  placeholder="Enter your name"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
             </div>
 
             <div className="flex gap-4 justify-center">
-              <Button onClick={handleSubmit} className="bg-blue-600 hover:bg-blue-700">
-                Save Results
-              </Button>
               <Button variant="outline" onClick={() => window.location.reload()}>
                 Start Over
+              </Button>
+              <Button onClick={handleSubmit} className="bg-black hover:bg-gray-800 text-white">
+                Save Results
               </Button>
             </div>
           </Card>
@@ -313,90 +312,86 @@ export function ImageVoting({
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-start justify-between mb-4">
             <div>
               <h1 className="text-3xl font-bold">{instanceTitle}</h1>
               {instanceDescription && (
                 <p className="text-gray-600 mt-2">{instanceDescription}</p>
               )}
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col items-end gap-4">
+              {/* Image counter badge - upper right */}
               <Badge variant="outline">
                 {currentIndex + 1} of {images.length}
               </Badge>
-              <Badge variant="outline">
-                {formatTime(timeLeft)}
-              </Badge>
-            </div>
-          </div>
-
-        {/* Timer Controls - Right side under badges */}
-          <div className="flex justify-end mb-8">
-            {hasStarted && (
-              <div className="flex items-center gap-2">
-                <Button 
-                  onClick={pauseTimer} 
-                  variant={isPaused ? "default" : "outline"}
-                  disabled={!isActive}
-                  size="sm"
-                >
-                  {isPaused ? <Play className="h-4 w-4 mr-2" /> : <Pause className="h-4 w-4 mr-2" />}
-                  {isPaused ? 'Resume' : 'Pause'}
-                </Button>
-                <Button onClick={resetTimer} variant="outline" size="sm">
-                  <RotateCcw className="h-4 w-4 mr-2" />
-                  Reset
-                </Button>
-              </div>
-            )}
-          </div>
-
-          {/* Timer Controls - Center */}
-          <div className="flex justify-center gap-4 mb-8">
-            {!hasStarted ? (
-              <Button onClick={startTimer} className="bg-green-600 hover:bg-green-700">
-                <Play className="h-4 w-4 mr-2" />
-                Start Voting
-              </Button>
-            ) : null}
-          </div>
-
-          {/* Circular Timer */}
-          <div className="flex justify-center mb-8">
-            <div className="relative w-20 h-20">
-              {/* Background circle */}
-              <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 100 100">
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="45"
-                  fill="none"
-                  stroke="#e5e7eb"
-                  strokeWidth="2"
-                />
-                {/* Progress circle */}
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="45"
-                  fill="none"
-                  stroke="#3b82f6"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeDasharray={`${2 * Math.PI * 45}`}
-                  strokeDashoffset={`${2 * Math.PI * 45 * (1 - (timerLength - timeLeft) / timerLength)}`}
-                  className="transition-all duration-1000 ease-linear"
-                />
-              </svg>
-              {/* Time display in center */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-lg font-bold text-gray-800">
-                    {formatTime(timeLeft)}
+              
+              {/* Timer Controls - Right side under badge */}
+              {hasStarted && (
+                <div className="flex items-center gap-2">
+                  <Button 
+                    onClick={pauseTimer} 
+                    variant={isPaused ? "default" : "outline"}
+                    disabled={!isActive}
+                    size="sm"
+                  >
+                    {isPaused ? <Play className="h-4 w-4 mr-2" /> : <Pause className="h-4 w-4 mr-2" />}
+                    {isPaused ? 'Resume' : 'Pause'}
+                  </Button>
+                  <Button onClick={resetTimer} variant="outline" size="sm">
+                    <RotateCcw className="h-4 w-4 mr-2" />
+                    Reset
+                  </Button>
+                </div>
+              )}
+              
+              {/* Circular Timer - Right side under controls */}
+              <div className="relative w-20 h-20">
+                {/* Background circle */}
+                <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 100 100">
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="45"
+                    fill="none"
+                    stroke="#e5e7eb"
+                    strokeWidth="2"
+                  />
+                  {/* Progress circle */}
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="45"
+                    fill="none"
+                    stroke="#3b82f6"
+                    strokeLinecap="round"
+                    strokeDasharray={`${2 * Math.PI * 45}`}
+                    strokeDashoffset={`${2 * Math.PI * 45 * (1 - (timerLength - timeLeft) / timerLength)}`}
+                    className="transition-all duration-1000 ease-linear"
+                  />
+                </svg>
+                {/* Time display in center */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-gray-800">
+                      {formatTime(timeLeft)}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Main Content Container */}
+        <div>
+          {/* Timer Controls - Center */}
+          <div className="flex justify-center gap-4 mb-8">
+            {!hasStarted ? (
+              <Button onClick={startTimer} className="bg-black hover:bg-gray-800 text-white">
+                <Play className="h-4 w-4 mr-2" />
+                Start Voting
+              </Button>
+            ) : null}
           </div>
 
           {/* Navigation */}
@@ -437,7 +432,7 @@ export function ImageVoting({
               className="cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg overflow-hidden"
               onClick={() => handleImageClick('left')}
             >
-              <CardContent className="p-0">
+              <CardContent className="[&:last-child]:pb-2 p-0">
                 <div className="relative overflow-hidden rounded-t-lg bg-gray-50">
                   <div className="min-h-64 flex items-center justify-center p-4">
                     <img
@@ -468,7 +463,7 @@ export function ImageVoting({
               className="cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg overflow-hidden"
               onClick={() => handleImageClick('right')}
             >
-              <CardContent className="p-0">
+              <CardContent className="[&:last-child]:pb-2 p-0">
                 <div className="relative overflow-hidden rounded-t-lg bg-gray-50">
                   <div className="min-h-64 flex items-center justify-center p-4">
                     <img
