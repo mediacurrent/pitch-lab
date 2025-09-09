@@ -20,8 +20,8 @@ interface AppVariant {
 }
 
 const categoryIcons = {
-  "Image Voting": Image,
-  "Slider Assessment": Sliders,
+  "This or That": Image,
+  "Sliders": Sliders,
   "Research": BarChart3,
   "User Testing": Users,
   "Quick Poll": Clock,
@@ -44,9 +44,9 @@ export function AppShowcase({ instances, sliders }: AppShowcaseProps) {
     if (instances.length > 0) {
       apps.push({
         id: "image-voting",
-        name: "Image Voting",
+        name: "This or That",
         description: "Interactive 'This or That' style voting with timed decisions. Perfect for design preference testing and brand research.",
-        category: "Image Voting",
+        category: "This or That",
         image: instances[0].imagePairs.length > 0 ? instances[0].imagePairs[0].imageUrl1 : "/placeholder.jpg",
         demoUrl: "/image-voting",
         features: [
@@ -64,9 +64,9 @@ export function AppShowcase({ instances, sliders }: AppShowcaseProps) {
     if (sliders.length > 0) {
       apps.push({
         id: "slider-assessment",
-        name: "Slider Assessment",
+        name: "Sliders",
         description: "Interactive slider-based preference analysis tool. Perfect for understanding user preferences and market research.",
-        category: "Slider Assessment",
+        category: "Sliders",
         image: "/modern-saas-dashboard.png",
         demoUrl: "/slider-assessment",
         features: [
