@@ -47,7 +47,7 @@ export function AppShowcase({ instances, sliders }: AppShowcaseProps) {
         name: "Image Voting",
         description: "Interactive 'This or That' style voting with timed decisions. Perfect for design preference testing and brand research.",
         category: "Image Voting",
-        image: instances[0].imagePairs.length > 0 ? instances[0].imagePairs[0].imageUrl1 : "/placeholder.svg",
+        image: instances[0].imagePairs.length > 0 ? instances[0].imagePairs[0].imageUrl1 : "/placeholder.jpg",
         demoUrl: "/image-voting",
         features: [
           `${instances.length} Available Assessments`,
@@ -105,8 +105,11 @@ export function AppShowcase({ instances, sliders }: AppShowcaseProps) {
               <a href="/" className="text-muted-foreground hover:text-foreground transition-colors">
                 Home
               </a>
-              <a href="/showcase" className="text-muted-foreground hover:text-foreground transition-colors">
-                Showcase
+              <a href="/image-voting" className="text-muted-foreground hover:text-foreground transition-colors">
+                Image Voting
+              </a>
+              <a href="/slider-assessment" className="text-muted-foreground hover:text-foreground transition-colors">
+                Slider Assessment
               </a>
               <a href="/admin" className="text-muted-foreground hover:text-foreground transition-colors">
                 Admin
@@ -171,7 +174,7 @@ export function AppShowcase({ instances, sliders }: AppShowcaseProps) {
                 <CardHeader className="p-0">
                   <div className="relative overflow-hidden rounded-t-lg">
                     <img
-                      src={app.image || "/placeholder.svg"}
+                      src={app.image || "/placeholder.jpg"}
                       alt={app.name}
                       className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
                     />
@@ -240,8 +243,8 @@ export function AppShowcase({ instances, sliders }: AppShowcaseProps) {
           <p className="text-muted-foreground mb-6 max-w-md mx-auto">
             Choose an assessment tool below to begin collecting user feedback and insights.
           </p>
-          <Button size="lg" className="bg-primary hover:bg-primary/90">
-            <a href="/" className="text-primary-foreground">Go to Home</a>
+          <Button size="lg" className="bg-primary hover:bg-primary/90" onClick={() => window.location.href = "/"}>
+            Go to Home
           </Button>
         </div>
       </main>
@@ -254,11 +257,11 @@ export function AppShowcase({ instances, sliders }: AppShowcaseProps) {
             <a href="/admin" className="hover:text-accent transition-colors">
               Admin Panel
             </a>
-            <a href="/" className="hover:text-accent transition-colors">
-              Home
+            <a href="/image-voting" className="hover:text-accent transition-colors">
+              Image Voting
             </a>
-            <a href="/showcase" className="hover:text-accent transition-colors">
-              Showcase
+            <a href="/slider-assessment" className="hover:text-accent transition-colors">
+              Slider Assessment
             </a>
           </div>
         </div>
