@@ -107,14 +107,6 @@ export function AppShowcase({ instances, sliders }: AppShowcaseProps) {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
-        {/* Hero Section */}
-        <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold text-foreground mb-4 text-balance">Interactive Research Tools</h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto text-pretty">
-            Discover our collection of interactive research and assessment tools designed for user testing, 
-            preference analysis, and data collection.
-          </p>
-        </div>
 
         {/* Category Filter */}
         <div className="flex flex-wrap justify-center gap-2 mb-8">
