@@ -1,4 +1,4 @@
-# Pitch Lab
+mp# Pitch Lab
 
 A modern multi-tenant slider assessment application built with Next.js 14 and Sanity CMS. Users can create slider-based assessments with custom criteria and preferences.
 

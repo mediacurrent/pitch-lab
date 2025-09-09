@@ -1,0 +1,268 @@
+"use client"
+
+import { useState } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { ExternalLink, Image, Sliders, Users, BarChart3, Clock, Palette } from "lucide-react"
+import { ThisOrThatInstance, SliderInstance } from "@/lib/sanity"
+
+interface AppVariant {
+  id: string
+  name: string
+  description: string
+  category: string
+  image: string
+  demoUrl: string
+  features: string[]
+  color: string
+  type: 'image-voting' | 'slider-assessment'
+}
+
+const categoryIcons = {
+  "Image Voting": Image,
+  "Slider Assessment": Sliders,
+  "Research": BarChart3,
+  "User Testing": Users,
+  "Quick Poll": Clock,
+  "Design": Palette,
+}
+
+interface AppShowcaseProps {
+  instances: ThisOrThatInstance[]
+  sliders: SliderInstance[]
+}
+
+export function AppShowcase({ instances, sliders }: AppShowcaseProps) {
+  const [selectedCategory, setSelectedCategory] = useState<string>("All")
+
+  // Transform Pitch Lab data into app showcase format
+  const transformToApps = (): AppVariant[] => {
+    const apps: AppVariant[] = []
+
+    // Add Image Voting app type (if there are any instances)
+    if (instances.length > 0) {
+      apps.push({
+        id: "image-voting",
+        name: "Image Voting",
+        description: "Interactive 'This or That' style voting with timed decisions. Perfect for design preference testing and brand research.",
+        category: "Image Voting",
+        image: instances[0].imagePairs.length > 0 ? instances[0].imagePairs[0].imageUrl1 : "/placeholder.svg",
+        demoUrl: "/image-voting",
+        features: [
+          `${instances.length} Available Assessments`,
+          "Timed Decisions",
+          "Real-time Voting",
+          "Session Analytics"
+        ],
+        color: "bg-blue-500",
+        type: 'image-voting'
+      })
+    }
+
+    // Add Slider Assessment app type (if there are any sliders)
+    if (sliders.length > 0) {
+      apps.push({
+        id: "slider-assessment",
+        name: "Slider Assessment",
+        description: "Interactive slider-based preference analysis tool. Perfect for understanding user preferences and market research.",
+        category: "Slider Assessment",
+        image: "/modern-saas-dashboard.png",
+        demoUrl: "/slider-assessment",
+        features: [
+          `${sliders.length} Available Assessments`,
+          "Preference Analysis",
+          "Data Collection",
+          "Results Tracking"
+        ],
+        color: "bg-purple-500",
+        type: 'slider-assessment'
+      })
+    }
+
+    return apps
+  }
+
+  const apps = transformToApps()
+  const categories = ["All", ...Array.from(new Set(apps.map((app) => app.category)))]
+
+  const filteredApps =
+    selectedCategory === "All" ? apps : apps.filter((app) => app.category === selectedCategory)
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                <BarChart3 className="w-5 h-5 text-primary-foreground" />
+              </div>
+              <h1 className="text-xl font-bold text-foreground">Pitch Lab</h1>
+            </div>
+            <nav className="hidden md:flex items-center space-x-6">
+              <a href="/" className="text-muted-foreground hover:text-foreground transition-colors">
+                Home
+              </a>
+              <a href="/showcase" className="text-muted-foreground hover:text-foreground transition-colors">
+                Showcase
+              </a>
+              <a href="/admin" className="text-muted-foreground hover:text-foreground transition-colors">
+                Admin
+              </a>
+            </nav>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-8">
+        {/* Hero Section */}
+        <div className="text-center mb-12">
+          <h2 className="text-4xl font-bold text-foreground mb-4 text-balance">Interactive Research Tools</h2>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto text-pretty">
+            Discover our collection of interactive research and assessment tools designed for user testing, 
+            preference analysis, and data collection.
+          </p>
+        </div>
+
+        {/* Category Filter */}
+        <div className="flex flex-wrap justify-center gap-2 mb-8">
+          {categories.map((category) => (
+            <Button
+              key={category}
+              variant={selectedCategory === category ? "default" : "outline"}
+              onClick={() => setSelectedCategory(category)}
+              className="transition-all duration-200"
+            >
+              {category}
+            </Button>
+          ))}
+        </div>
+
+        {/* App Grid */}
+        {filteredApps.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+              <BarChart3 className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-xl font-semibold text-foreground mb-2">No Apps Available</h3>
+            <p className="text-muted-foreground mb-4">
+              {selectedCategory === "All" 
+                ? "No research tools are available yet. Create some assessments in the admin panel to get started!" 
+                : `No apps found in the "${selectedCategory}" category.`}
+            </p>
+            <Button variant="outline" onClick={() => setSelectedCategory("All")}>
+              View All Categories
+            </Button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredApps.map((app) => {
+            const IconComponent = categoryIcons[app.category as keyof typeof categoryIcons]
+
+            return (
+              <Card
+                key={app.id}
+                className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer border-border/50 hover:border-primary/20"
+                onClick={() => window.location.href = app.demoUrl}
+              >
+                <CardHeader className="p-0">
+                  <div className="relative overflow-hidden rounded-t-lg">
+                    <img
+                      src={app.image || "/placeholder.svg"}
+                      alt={app.name}
+                      className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <div className="absolute top-4 left-4">
+                      <Badge variant="default" className="bg-primary/90 text-primary-foreground backdrop-blur-sm">
+                        <IconComponent className="w-3 h-3 mr-1" />
+                        {app.category}
+                      </Badge>
+                    </div>
+                    <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <Button 
+                        size="sm" 
+                        className="bg-primary/90 backdrop-blur-sm hover:bg-primary"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          window.location.href = app.demoUrl
+                        }}
+                      >
+                        <ExternalLink className="w-4 h-4 mr-1" />
+                        {app.type === 'image-voting' ? 'Explore Image Voting' : 'Explore Slider Assessment'}
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <CardTitle className="text-lg mb-2 text-foreground group-hover:text-primary transition-colors">
+                    {app.name}
+                  </CardTitle>
+                  <CardDescription className="text-muted-foreground mb-4 text-pretty">
+                    {app.description}
+                  </CardDescription>
+                  <div className="flex flex-wrap gap-1 mb-4">
+                    {app.features.slice(0, 3).map((feature, index) => (
+                      <Badge key={index} variant="outline" className="text-xs">
+                        {feature}
+                      </Badge>
+                    ))}
+                    {app.features.length > 3 && (
+                      <Badge variant="outline" className="text-xs">
+                        +{app.features.length - 3} more
+                      </Badge>
+                    )}
+                  </div>
+                  <Button
+                    className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors bg-transparent"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      window.location.href = app.demoUrl
+                    }}
+                  >
+                    {app.type === 'image-voting' ? 'Explore Image Voting' : 'Explore Slider Assessment'}
+                    <ExternalLink className="w-4 h-4 ml-2" />
+                  </Button>
+                </CardContent>
+              </Card>
+            )
+          })}
+          </div>
+        )}
+
+        {/* Call to Action */}
+        <div className="text-center mt-16 py-12 bg-muted/30 rounded-lg">
+          <h3 className="text-2xl font-bold text-foreground mb-4">Ready to Start Research?</h3>
+          <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+            Choose an assessment tool below to begin collecting user feedback and insights.
+          </p>
+          <Button size="lg" className="bg-primary hover:bg-primary/90">
+            <a href="/" className="text-primary-foreground">Go to Home</a>
+          </Button>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-primary text-primary-foreground py-8 mt-16">
+        <div className="container mx-auto px-4 text-center">
+          <p className="mb-4">© 2024 Pitch Lab. Interactive research and assessment tools.</p>
+          <div className="flex justify-center space-x-6">
+            <a href="/admin" className="hover:text-accent transition-colors">
+              Admin Panel
+            </a>
+            <a href="/" className="hover:text-accent transition-colors">
+              Home
+            </a>
+            <a href="/showcase" className="hover:text-accent transition-colors">
+              Showcase
+            </a>
+          </div>
+        </div>
+      </footer>
+    </div>
+  )
+}
