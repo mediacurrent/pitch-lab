@@ -101,20 +101,6 @@ export function AppShowcase({ instances, sliders }: AppShowcaseProps) {
               </div>
               <h1 className="text-xl font-bold text-foreground">Pitch Lab</h1>
             </div>
-            <nav className="hidden md:flex items-center space-x-6">
-              <a href="/" className="text-muted-foreground hover:text-foreground transition-colors">
-                Home
-              </a>
-              <a href="/image-voting" className="text-muted-foreground hover:text-foreground transition-colors">
-                Image Voting
-              </a>
-              <a href="/slider-assessment" className="text-muted-foreground hover:text-foreground transition-colors">
-                Slider Assessment
-              </a>
-              <a href="/admin" className="text-muted-foreground hover:text-foreground transition-colors">
-                Admin
-              </a>
-            </nav>
           </div>
         </div>
       </header>
@@ -256,12 +242,6 @@ export function AppShowcase({ instances, sliders }: AppShowcaseProps) {
           <div className="flex justify-center space-x-6">
             <a href="/admin" className="hover:text-accent transition-colors">
               Admin Panel
-            </a>
-            <a href="/image-voting" className="hover:text-accent transition-colors">
-              Image Voting
-            </a>
-            <a href="/slider-assessment" className="hover:text-accent transition-colors">
-              Slider Assessment
             </a>
           </div>
         </div>
