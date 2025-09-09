@@ -3,6 +3,7 @@ import { getAllInstances, getAllSliders } from '@/lib/sanity'
 
 // Force dynamic rendering to avoid build-time Sanity client creation
 export const dynamic = 'force-dynamic'
+// Trigger rebuild
 
 export default async function ShowcasePage() {
   const [instances, sliders] = await Promise.all([
