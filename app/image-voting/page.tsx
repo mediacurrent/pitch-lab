@@ -27,8 +27,8 @@ export default async function ImageVotingPage() {
               <Link href="/" className="text-muted-foreground hover:text-foreground transition-colors">
                 Home
               </Link>
-              <Link href="/showcase" className="text-muted-foreground hover:text-foreground transition-colors">
-                Showcase
+              <Link href="/slider-assessment" className="text-muted-foreground hover:text-foreground transition-colors">
+                Slider Assessment
               </Link>
               <Link href="/admin" className="text-muted-foreground hover:text-foreground transition-colors">
                 Admin
@@ -42,10 +42,10 @@ export default async function ImageVotingPage() {
       <main className="container mx-auto px-4 py-8">
         {/* Back Button */}
         <div className="mb-6">
-          <Link href="/showcase">
+          <Link href="/">
             <Button variant="outline" className="gap-2">
               <ArrowLeft className="w-4 h-4" />
-              Back to Showcase
+              Back to Home
             </Button>
           </Link>
         </div>
@@ -175,9 +175,9 @@ export default async function ImageVotingPage() {
           <p className="text-muted-foreground mb-6 max-w-md mx-auto">
             Choose an assessment above to begin collecting user feedback through image voting.
           </p>
-          <Link href="/showcase">
+          <Link href="/">
             <Button variant="outline" className="bg-white">
-              Back to Showcase
+              Back to Home
             </Button>
           </Link>
         </div>
@@ -194,8 +194,8 @@ export default async function ImageVotingPage() {
             <Link href="/" className="hover:text-accent transition-colors">
               Home
             </Link>
-            <Link href="/showcase" className="hover:text-accent transition-colors">
-              Showcase
+            <Link href="/slider-assessment" className="hover:text-accent transition-colors">
+              Slider Assessment
             </Link>
           </div>
         </div>

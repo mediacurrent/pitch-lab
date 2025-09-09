@@ -27,8 +27,8 @@ export default async function SliderAssessmentPage() {
               <Link href="/" className="text-muted-foreground hover:text-foreground transition-colors">
                 Home
               </Link>
-              <Link href="/showcase" className="text-muted-foreground hover:text-foreground transition-colors">
-                Showcase
+              <Link href="/image-voting" className="text-muted-foreground hover:text-foreground transition-colors">
+                Image Voting
               </Link>
               <Link href="/admin" className="text-muted-foreground hover:text-foreground transition-colors">
                 Admin
@@ -42,10 +42,10 @@ export default async function SliderAssessmentPage() {
       <main className="container mx-auto px-4 py-8">
         {/* Back Button */}
         <div className="mb-6">
-          <Link href="/showcase">
+          <Link href="/">
             <Button variant="outline" className="gap-2">
               <ArrowLeft className="w-4 h-4" />
-              Back to Showcase
+              Back to Home
             </Button>
           </Link>
         </div>
@@ -193,9 +193,9 @@ export default async function SliderAssessmentPage() {
           <p className="text-muted-foreground mb-6 max-w-md mx-auto">
             Choose an assessment above to begin collecting user preferences through slider interactions.
           </p>
-          <Link href="/showcase">
+          <Link href="/">
             <Button variant="outline" className="bg-white">
-              Back to Showcase
+              Back to Home
             </Button>
           </Link>
         </div>
@@ -212,8 +212,8 @@ export default async function SliderAssessmentPage() {
             <Link href="/" className="hover:text-accent transition-colors">
               Home
             </Link>
-            <Link href="/showcase" className="hover:text-accent transition-colors">
-              Showcase
+            <Link href="/image-voting" className="hover:text-accent transition-colors">
+              Image Voting
             </Link>
           </div>
         </div>
