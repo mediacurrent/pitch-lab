@@ -185,29 +185,6 @@ export function AppShowcase({ instances, sliders }: AppShowcaseProps) {
                   <CardDescription className="text-muted-foreground mb-4 text-pretty">
                     {app.description}
                   </CardDescription>
-                  <div className="flex flex-wrap gap-1 mb-4">
-                    {app.features.slice(0, 3).map((feature, index) => (
-                      <Badge key={index} variant="outline" className="text-xs">
-                        {feature}
-                      </Badge>
-                    ))}
-                    {app.features.length > 3 && (
-                      <Badge variant="outline" className="text-xs">
-                        +{app.features.length - 3} more
-                      </Badge>
-                    )}
-                  </div>
-                  <Button
-                    className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors bg-transparent"
-                    variant="outline"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      window.location.href = app.demoUrl
-                    }}
-                  >
-                    {app.type === 'image-voting' ? 'Explore Image Voting' : 'Explore Slider Assessment'}
-                    <ExternalLink className="w-4 h-4 ml-2" />
-                  </Button>
                 </CardContent>
               </Card>
             )
