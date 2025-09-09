@@ -215,29 +215,7 @@ export function AppShowcase({ instances, sliders }: AppShowcaseProps) {
           </div>
         )}
 
-        {/* Call to Action */}
-        <div className="text-center mt-16 py-12 bg-muted/30 rounded-lg">
-          <h3 className="text-2xl font-bold text-foreground mb-4">Ready to Start Research?</h3>
-          <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-            Choose an assessment tool below to begin collecting user feedback and insights.
-          </p>
-          <Button size="lg" className="bg-primary hover:bg-primary/90" onClick={() => window.location.href = "/"}>
-            Go to Home
-          </Button>
-        </div>
       </main>
-
-      {/* Footer */}
-      <footer className="bg-primary text-primary-foreground py-8 mt-16">
-        <div className="container mx-auto px-4 text-center">
-          <p className="mb-4">© 2024 Pitch Lab. Interactive research and assessment tools.</p>
-          <div className="flex justify-center space-x-6">
-            <a href="/admin" className="hover:text-accent transition-colors">
-              Admin Panel
-            </a>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }
