@@ -48,7 +48,7 @@ export function AppShowcase({ instances, sliders }: AppShowcaseProps) {
         description: "Interactive 'This or That' style voting with timed decisions. Perfect for design preference testing and brand research.",
         category: "This or That",
         image: instances[0].imagePairs.length > 0 ? instances[0].imagePairs[0].imageUrl1 : "/placeholder.jpg",
-        demoUrl: "/image-voting",
+        demoUrl: "/thisorthat",
         features: [
           `${instances.length} Available Assessments`,
           "Timed Decisions",
@@ -68,7 +68,7 @@ export function AppShowcase({ instances, sliders }: AppShowcaseProps) {
         description: "Interactive slider-based preference analysis tool. Perfect for understanding user preferences and market research.",
         category: "Sliders",
         image: "/modern-saas-dashboard.png",
-        demoUrl: "/slider-assessment",
+        demoUrl: "/sliders",
         features: [
           `${sliders.length} Available Assessments`,
           "Preference Analysis",

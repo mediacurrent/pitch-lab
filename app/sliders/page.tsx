@@ -1,65 +1,205 @@
+import { getAllSliders } from '@/lib/sanity'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Sliders, Users, BarChart3, ArrowLeft, TrendingUp } from 'lucide-react'
 import Link from 'next/link'
-import { getAllSliders } from '@/lib/sanity'
-import Image from 'next/image'
+
+// Force dynamic rendering to avoid build-time Sanity client creation
+export const dynamic = 'force-dynamic'
 
 export default async function SlidersPage() {
   const sliders = await getAllSliders()
 
   return (
-    <div className="container mx-auto py-8">
-                   {/* Logo and Header */}
-             <div className="flex items-center justify-center mb-8">
-               <svg width="254" height="32" viewBox="0 0 254 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                 <path d="M14 4.33334V27.6667M22.2496 7.75042L5.75042 24.2496M25.6667 16H2.33333M22.2496 24.2496L5.75042 7.75042" stroke="#111111" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                 <path d="M40.34 15.752H47.004C47.9187 15.752 48.6747 15.4347 49.272 14.8C49.888 14.1467 50.196 13.3253 50.196 12.336C50.196 11.3467 49.888 10.5347 49.272 9.9C48.6747 9.24667 47.9187 8.92 47.004 8.92H40.34V6.4H46.724C47.9747 6.4 49.0947 6.66133 50.084 7.184C51.092 7.688 51.876 8.388 52.436 9.284C52.996 10.18 53.276 11.1973 53.276 12.336C53.276 13.4747 52.996 14.492 52.436 15.388C51.8947 16.284 51.1293 16.9933 50.14 17.516C49.1693 18.02 48.068 18.272 46.836 18.272H40.34V15.752ZM39.052 6.4H42.132V26H39.052V6.4ZM59.9444 6.4H63.0244V26H59.9444V6.4ZM55.9124 6.4H67.0564V8.92H55.9124V6.4ZM55.9124 23.48H67.0564V26H55.9124V23.48ZM76.1888 6.4H79.2688V26H76.1888V6.4ZM69.7488 6.4H85.7088V8.92H69.7488V6.4ZM94.6731 26.448C92.9185 26.448 91.3971 26.0373 90.1091 25.216C88.8398 24.3947 87.8598 23.2187 87.1691 21.688C86.4971 20.1387 86.1611 18.3 86.1611 16.172C86.1611 14.0627 86.4971 12.2427 87.1691 10.712C87.8598 9.16267 88.8398 7.98667 90.1091 7.184C91.3971 6.36267 92.9185 5.952 94.6731 5.952C96.7825 5.952 98.5185 6.512 99.8811 7.632C101.244 8.752 102.046 10.2827 102.289 12.224H99.1811C98.9758 11.0667 98.4625 10.152 97.6411 9.48C96.8385 8.808 95.8398 8.472 94.6451 8.472C93.5251 8.472 92.5545 8.78 91.7331 9.396C90.9305 10.012 90.3145 10.908 89.8851 12.084C89.4558 13.2413 89.2411 14.6227 89.2411 16.228C89.2411 18.636 89.7171 20.5213 90.6691 21.884C91.6211 23.2467 92.9371 23.928 94.6171 23.928C95.8118 23.928 96.8198 23.592 97.6411 22.92C98.4625 22.2293 98.9758 21.3053 99.1811 20.148H102.289C102.121 21.436 101.701 22.556 101.029 23.508C100.357 24.46 99.4705 25.188 98.3691 25.692C97.2865 26.196 96.0545 26.448 94.6731 26.448ZM113.606 6.4H116.686V26H113.606V6.4ZM103.75 6.4H106.83V26H103.75V6.4ZM104.814 14.94H115.398V17.46H104.814V14.94ZM120.582 26.7H132.342V29.08H120.582V26.7ZM137.078 6.4H140.158V26H137.078V6.4ZM138.142 23.48H150.126V26H138.142V23.48ZM157.859 6.4H160.911L167.631 26H164.579L157.859 6.4ZM156.991 6.4H160.043L153.323 26H150.271L156.991 6.4ZM153.995 18.3H164.019V20.82H153.995V18.3ZM169.091 23.48H175.503C176.735 23.48 177.706 23.2093 178.415 22.668C179.143 22.108 179.507 21.3613 179.507 20.428C179.507 19.4947 179.152 18.7667 178.443 18.244C177.734 17.7027 176.754 17.432 175.503 17.432H169.091V14.912H175.503C176.492 14.912 177.267 14.6507 177.827 14.128C178.406 13.5867 178.695 12.8493 178.695 11.916C178.695 10.9827 178.406 10.2547 177.827 9.732C177.267 9.19067 176.492 8.92 175.503 8.92H169.091V6.4H175.223C177.239 6.4 178.835 6.876 180.011 7.828C181.187 8.76133 181.775 10.0307 181.775 11.636C181.775 13.2227 181.206 14.464 180.067 15.36C178.928 16.2373 177.351 16.676 175.335 16.676V15.556C177.631 15.556 179.414 16.0227 180.683 16.956C181.952 17.8893 182.587 19.196 182.587 20.876C182.587 21.9027 182.344 22.808 181.859 23.592C181.374 24.3573 180.674 24.9547 179.759 25.384C178.863 25.7947 177.818 26 176.623 26H169.091V23.48ZM167.803 6.4H170.883V26H167.803V6.4Z" fill="#111111"/>
-                 <path d="M195.688 12.704H194.48V15H193.752V9.408H195.712C196.251 9.408 196.683 9.53333 197.008 9.784C197.333 10.0347 197.496 10.4187 197.496 10.936C197.496 11.2613 197.424 11.536 197.28 11.76C197.136 11.9787 196.899 12.1707 196.568 12.336C196.765 12.416 196.917 12.504 197.024 12.6C197.131 12.696 197.208 12.8267 197.256 12.992C197.304 13.152 197.336 13.368 197.352 13.64L197.376 14.056C197.387 14.1893 197.408 14.328 197.44 14.472C197.472 14.616 197.547 14.7307 197.664 14.816V15H196.84C196.781 14.8773 196.731 14.736 196.688 14.576C196.651 14.416 196.632 14.2453 196.632 14.064V13.712C196.632 13.3813 196.557 13.1307 196.408 12.96C196.259 12.7893 196.019 12.704 195.688 12.704ZM194.48 10.04V12.072H195.568C195.931 12.072 196.216 11.9947 196.424 11.84C196.632 11.68 196.736 11.4053 196.736 11.016C196.736 10.6747 196.632 10.4267 196.424 10.272C196.221 10.1173 195.936 10.04 195.568 10.04H194.48ZM201.673 12.464H199.273V14.344H201.937V15H198.529V9.408H201.793V10.064H199.273V11.808H201.673V12.464ZM206.667 11.024H205.947C205.936 10.704 205.835 10.44 205.643 10.232C205.451 10.0187 205.16 9.912 204.771 9.912C204.387 9.912 204.093 9.99733 203.891 10.168C203.693 10.3387 203.595 10.5493 203.595 10.8C203.595 11.248 203.848 11.5307 204.355 11.648L205.499 11.912C205.936 12.0133 206.267 12.1973 206.491 12.464C206.715 12.7307 206.827 13.0453 206.827 13.408C206.827 13.776 206.741 14.0907 206.571 14.352C206.405 14.608 206.173 14.8053 205.875 14.944C205.581 15.0773 205.237 15.144 204.843 15.144C204.149 15.144 203.619 14.9733 203.251 14.632C202.888 14.2853 202.701 13.8133 202.691 13.216H203.411C203.416 13.5893 203.541 13.8933 203.787 14.128C204.032 14.3627 204.389 14.48 204.859 14.48C205.28 14.48 205.587 14.3893 205.779 14.208C205.976 14.0267 206.075 13.7947 206.075 13.512C206.075 13.2613 206.005 13.064 205.867 12.92C205.733 12.776 205.528 12.672 205.251 12.608L204.091 12.336C203.685 12.24 203.376 12.0693 203.163 11.824C202.949 11.5733 202.843 11.256 202.843 10.872C202.843 10.5573 202.923 10.2827 203.083 10.048C203.243 9.808 203.467 9.62133 203.755 9.488C204.048 9.34933 204.395 9.28 204.795 9.28C205.184 9.28 205.517 9.352 205.795 9.496C206.077 9.64 206.293 9.83733 206.443 10.088C206.592 10.3333 206.667 10.6107 206.667 10.92V11.024ZM210.924 12.464H208.524V14.344H211.188V15H207.78V9.408H211.044V10.064H208.524V11.808H210.924V12.464ZM215.429 15L214.933 13.328H213.005L212.509 15H211.741L213.509 9.408H214.445L216.205 15H215.429ZM213.189 12.704H214.749L213.965 10.08L213.189 12.704ZM218.815 12.704H217.607V15H216.879V9.408H218.839C219.377 9.408 219.809 9.53333 220.135 9.784C220.46 10.0347 220.623 10.4187 220.623 10.936C220.623 11.2613 220.551 11.536 220.407 11.76C220.263 11.9787 220.025 12.1707 219.695 12.336C219.892 12.416 220.044 12.504 220.151 12.6C220.257 12.696 220.335 12.8267 220.383 12.992C220.431 13.152 220.463 13.368 220.479 13.64L220.503 14.056C220.513 14.1893 220.535 14.328 220.567 14.472C220.599 14.616 220.673 14.7307 220.791 14.816V15H219.967C219.908 14.8773 219.857 14.736 219.815 14.576C219.777 14.416 219.759 14.2453 219.759 14.064V13.712C219.759 13.3813 219.684 13.1307 219.535 12.96C219.385 12.7893 219.145 12.704 218.815 12.704ZM217.607 10.04V12.072H218.695C219.057 12.072 219.343 11.9947 219.551 11.84C219.759 11.68 219.863 11.4053 219.863 11.016C219.863 10.6747 219.759 10.4267 219.551 10.272C219.348 10.1173 219.063 10.04 218.695 10.04H217.607ZM225.352 10.968H224.592C224.512 10.664 224.387 10.416 224.216 10.224C224.045 10.032 223.781 9.936 223.424 9.936C223.072 9.936 222.787 10.032 222.568 10.224C222.355 10.416 222.2 10.6853 222.104 11.032C222.008 11.3733 221.96 11.768 221.96 12.216C221.96 12.9733 222.085 13.5413 222.336 13.92C222.587 14.2987 222.949 14.488 223.424 14.488C223.797 14.488 224.075 14.3707 224.256 14.136C224.437 13.9013 224.568 13.5573 224.648 13.104H225.408C225.333 13.7813 225.12 14.2907 224.768 14.632C224.416 14.9733 223.965 15.144 223.416 15.144C222.931 15.144 222.523 15.0267 222.192 14.792C221.861 14.552 221.611 14.2133 221.44 13.776C221.269 13.3387 221.184 12.8213 221.184 12.224C221.184 11.824 221.224 11.4453 221.304 11.088C221.389 10.7307 221.52 10.4187 221.696 10.152C221.872 9.88 222.104 9.66667 222.392 9.512C222.68 9.35733 223.032 9.28 223.448 9.28C223.821 9.28 224.139 9.35467 224.4 9.504C224.661 9.65333 224.872 9.856 225.032 10.112C225.192 10.3627 225.299 10.648 225.352 10.968ZM228.953 15V12.464H226.753V15H226.009V9.408H226.753V11.808H228.953V9.408H229.697V15H228.953ZM197.096 23L196.632 22.384C196.419 22.608 196.179 22.784 195.912 22.912C195.645 23.04 195.368 23.104 195.08 23.104C194.568 23.104 194.163 22.96 193.864 22.672C193.565 22.384 193.416 21.9893 193.416 21.488C193.416 20.8373 193.728 20.32 194.352 19.936L194.648 19.752L194.64 19.736C194.437 19.464 194.285 19.2427 194.184 19.072C194.083 18.9013 194.032 18.7147 194.032 18.512C194.032 18.272 194.093 18.0613 194.216 17.88C194.344 17.6987 194.509 17.5573 194.712 17.456C194.92 17.3493 195.141 17.296 195.376 17.296C195.744 17.296 196.045 17.4 196.28 17.608C196.52 17.8107 196.64 18.0987 196.64 18.472C196.64 18.7067 196.573 18.9253 196.44 19.128C196.312 19.3253 196.125 19.504 195.88 19.664L195.536 19.888L196.64 21.344C196.784 21.0293 196.872 20.6853 196.904 20.312H197.496C197.48 20.5947 197.432 20.8667 197.352 21.128C197.272 21.3893 197.165 21.6293 197.032 21.848L197.912 23H197.096ZM194.944 19.12L195.2 19.448L195.632 19.176C195.755 19.1013 195.851 19 195.92 18.872C195.989 18.7387 196.024 18.5973 196.024 18.448C196.024 18.2613 195.965 18.1173 195.848 18.016C195.731 17.9093 195.571 17.856 195.368 17.856C195.171 17.856 195.005 17.912 194.872 18.024C194.744 18.136 194.68 18.28 194.68 18.456C194.68 18.5627 194.699 18.6693 194.736 18.776C194.773 18.8773 194.843 18.992 194.944 19.12ZM194.064 21.488C194.064 21.776 194.163 22.0133 194.36 22.2C194.557 22.3867 194.803 22.48 195.096 22.48C195.325 22.48 195.539 22.432 195.736 22.336C195.939 22.2347 196.12 22.0933 196.28 21.912L194.984 20.2L194.712 20.376C194.472 20.5307 194.304 20.6933 194.208 20.864C194.112 21.0347 194.064 21.2427 194.064 21.488ZM204.667 23H202.859V17.408H204.667C205.141 17.408 205.536 17.528 205.851 17.768C206.165 18.008 206.4 18.3387 206.555 18.76C206.715 19.176 206.795 19.656 206.795 20.2C206.795 20.744 206.715 21.2267 206.555 21.648C206.4 22.0693 206.165 22.4 205.851 22.64C205.536 22.88 205.141 23 204.667 23ZM203.603 18.064V22.344H204.539C205.061 22.344 205.437 22.1547 205.667 21.776C205.901 21.392 206.019 20.8693 206.019 20.208C206.019 19.5413 205.901 19.0187 205.667 18.64C205.437 18.256 205.061 18.064 204.539 18.064H203.603ZM210.924 20.464H208.524V22.344H211.188V23H207.78V17.408H211.044V18.064H208.524V19.808H210.924V20.464ZM216.205 17.408L214.405 23H213.541L211.741 17.408H212.525L213.981 22.232L215.429 17.408H216.205ZM220.175 20.464H217.775V22.344H220.439V23H217.031V17.408H220.295V18.064H217.775V19.808H220.175V20.464ZM221.744 17.408H222.488V22.344H225.152V23H221.744V17.408ZM227.849 17.28C228.537 17.28 229.071 17.5387 229.449 18.056C229.833 18.568 230.025 19.288 230.025 20.216C230.025 21.144 229.833 21.864 229.449 22.376C229.071 22.888 228.537 23.144 227.849 23.144C227.161 23.144 226.625 22.888 226.241 22.376C225.863 21.864 225.673 21.144 225.673 20.216C225.673 19.288 225.863 18.568 226.241 18.056C226.625 17.5387 227.161 17.28 227.849 17.28ZM227.849 17.936C227.412 17.936 227.068 18.1387 226.817 18.544C226.572 18.944 226.449 19.5013 226.449 20.216C226.449 20.9253 226.572 21.4827 226.817 21.888C227.068 22.288 227.412 22.488 227.849 22.488C228.292 22.488 228.636 22.288 228.881 21.888C229.127 21.4827 229.249 20.9253 229.249 20.216C229.249 19.5013 229.127 18.944 228.881 18.544C228.636 18.1387 228.292 17.936 227.849 17.936ZM230.73 23V17.408H232.77C233.106 17.408 233.41 17.472 233.682 17.6C233.954 17.7227 234.17 17.9093 234.33 18.16C234.49 18.4053 234.57 18.712 234.57 19.08C234.57 19.448 234.49 19.7573 234.33 20.008C234.17 20.2533 233.954 20.44 233.682 20.568C233.41 20.6907 233.106 20.752 232.77 20.752H231.458V23H230.73ZM231.458 20.12H232.674C233.032 20.12 233.309 20.0267 233.506 19.84C233.709 19.6533 233.81 19.4 233.81 19.08C233.81 18.76 233.709 18.5067 233.506 18.32C233.309 18.1333 233.032 18.04 232.674 18.04H231.458V20.12ZM236.796 21.4L235.772 18.576V23H235.14V17.408H235.972L237.108 20.624L238.244 17.408H239.06V23H238.428V18.568L237.42 21.4H236.796ZM243.301 20.464H240.901V22.344H243.565V23H240.157V17.408H243.421V18.064H240.901V19.808H243.301V20.464ZM247.526 17.408H248.214V23H247.382L245.182 18.528H245.174V23H244.486V17.408H245.294L247.518 21.92H247.526V17.408ZM253.024 18.064H251.352V23H250.608V18.064H248.928V17.408H253.024V18.064Z" fill="#111111"/>
-               </svg>
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
+                <Sliders className="w-5 h-5 text-white" />
+              </div>
+              <h1 className="text-xl font-bold text-foreground">Sliders</h1>
+            </div>
+            <nav className="hidden md:flex items-center space-x-6">
+              <Link href="/" className="text-muted-foreground hover:text-foreground transition-colors">
+                Home
+              </Link>
+              <Link href="/thisorthat" className="text-muted-foreground hover:text-foreground transition-colors">
+                This or That
+              </Link>
+              <Link href="/admin" className="text-muted-foreground hover:text-foreground transition-colors">
+                Admin
+              </Link>
+            </nav>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-8">
+        {/* Back Button */}
+        <div className="mb-6">
+          <Link href="/">
+            <Button variant="outline" className="gap-2">
+              <ArrowLeft className="w-4 h-4" />
+              Back to Home
+            </Button>
+          </Link>
+        </div>
+
+        {/* Hero Section */}
+        <div className="text-center mb-12">
+          <div className="w-16 h-16 bg-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <Sliders className="w-8 h-8 text-white" />
+          </div>
+          <h2 className="text-4xl font-bold text-foreground mb-4 text-balance">Sliders</h2>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto text-pretty mb-8">
+            Interactive slider-based preference analysis tool. Perfect for understanding user preferences, 
+            product positioning, and market research through intuitive slider interactions.
+          </p>
+          
+          {/* Features */}
+          <div className="flex flex-wrap justify-center gap-4 mb-8">
+            <div className="flex items-center gap-2 bg-muted/50 px-4 py-2 rounded-lg">
+              <TrendingUp className="w-4 h-4 text-purple-500" />
+              <span className="text-sm font-medium">Preference Analysis</span>
+            </div>
+            <div className="flex items-center gap-2 bg-muted/50 px-4 py-2 rounded-lg">
+              <Users className="w-4 h-4 text-purple-500" />
+              <span className="text-sm font-medium">User Insights</span>
+            </div>
+            <div className="flex items-center gap-2 bg-muted/50 px-4 py-2 rounded-lg">
+              <BarChart3 className="w-4 h-4 text-purple-500" />
+              <span className="text-sm font-medium">Data Collection</span>
+            </div>
+          </div>
              </div>
       
+        {/* Available Assessments */}
       <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2 text-center">Sliders</h1>
-        <p className="text-muted-foreground text-center">
-          Choose from our collection of slider voting experiences
+          <h3 className="text-2xl font-bold text-foreground mb-6">Available Assessments</h3>
+          
+          {sliders.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                <Sliders className="w-8 h-8 text-muted-foreground" />
+              </div>
+              <h4 className="text-xl font-semibold text-foreground mb-2">No Assessments Available</h4>
+              <p className="text-muted-foreground mb-4">
+                No slider assessments have been created yet. Check back soon!
         </p>
       </div>
-
-      {sliders.length > 0 ? (
+          ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {sliders.map((slider) => (
             <Card key={slider.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
-                <CardTitle className="text-xl">{slider.title}</CardTitle>
-                <CardDescription>
-                  {slider.description || 'No description available'}
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <CardTitle className="text-lg mb-2">{slider.title}</CardTitle>
+                        {slider.description && (
+                          <CardDescription className="line-clamp-2">
+                            {slider.description}
                 </CardDescription>
+                        )}
+                      </div>
+                      <Badge variant="secondary" className="bg-purple-100 text-purple-800">
+                        <Sliders className="w-3 h-3 mr-1" />
+                        Slider
+                      </Badge>
+                    </div>
               </CardHeader>
               <CardContent>
-                <div className="flex justify-between items-center mb-4">
-                  <div className="text-sm text-muted-foreground">
-                    {slider.sliderPairs.length} pair{slider.sliderPairs.length !== 1 ? 's' : ''}
+                    <div className="space-y-2 mb-4">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Slider Pairs:</span>
+                        <span className="font-medium">{slider.sliderPairs.length}</span>
                   </div>
-                  <div className="text-sm text-muted-foreground">
-                    Created by {slider.createdBy}
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Estimated Time:</span>
+                        <span className="font-medium">{Math.ceil(slider.sliderPairs.length * 2)} min</span>
                   </div>
                 </div>
                 <Link href={`/sliders/${slider.slug}`} className="w-full">
-                  <Button className="w-full">Start Sliding</Button>
+                      <Button className="w-full bg-purple-500 hover:bg-purple-600">
+                        Start Assessment
+                      </Button>
                 </Link>
               </CardContent>
             </Card>
           ))}
         </div>
-      ) : (
-        <Card className="text-center py-12">
-          <CardContent className="pt-6">
-            <p className="text-muted-foreground text-center py-8">
-              No sliders available yet. Check back soon!
-            </p>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </div>
+
+        {/* How It Works */}
+        <div className="bg-muted/30 rounded-lg p-8 mb-8">
+          <h3 className="text-2xl font-bold text-foreground mb-6 text-center">How Sliders Work</h3>
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="text-center">
+              <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <span className="text-white font-bold">1</span>
+              </div>
+              <h4 className="font-semibold mb-2">Choose Your Assessment</h4>
+              <p className="text-sm text-muted-foreground">
+                Select from available slider assessments designed for your specific research goals.
+              </p>
+            </div>
+            <div className="text-center">
+              <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <span className="text-white font-bold">2</span>
+              </div>
+              <h4 className="font-semibold mb-2">Adjust Sliders</h4>
+              <p className="text-sm text-muted-foreground">
+                Use intuitive sliders to express preferences between different options or concepts.
+              </p>
+            </div>
+            <div className="text-center">
+              <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <span className="text-white font-bold">3</span>
+              </div>
+              <h4 className="font-semibold mb-2">Analyze Results</h4>
+              <p className="text-sm text-muted-foreground">
+                Review detailed analytics and preference patterns to inform your decisions.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Call to Action */}
+        <div className="text-center py-12 bg-purple-50 rounded-lg">
+          <h3 className="text-2xl font-bold text-foreground mb-4">Ready to Start?</h3>
+          <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+            Choose an assessment above to begin collecting user preferences through slider interactions.
+          </p>
+          <Link href="/">
+            <Button variant="outline" className="bg-white">
+              Back to Home
+            </Button>
+          </Link>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-primary text-primary-foreground py-8 mt-16">
+        <div className="container mx-auto px-4 text-center">
+          <p className="mb-4">© 2024 Pitch Lab. Interactive research and assessment tools.</p>
+          <div className="flex justify-center space-x-6">
+            <Link href="/admin" className="hover:text-accent transition-colors">
+              Admin Panel
+            </Link>
+            <Link href="/" className="hover:text-accent transition-colors">
+              Home
+            </Link>
+            <Link href="/thisorthat" className="hover:text-accent transition-colors">
+              This or That
+            </Link>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }

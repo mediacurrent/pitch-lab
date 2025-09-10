@@ -1,15 +1,15 @@
-import { getAllSliders } from '@/lib/sanity'
+import { getAllInstances } from '@/lib/sanity'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Sliders, Users, BarChart3, ArrowLeft, TrendingUp } from 'lucide-react'
+import { Image, Clock, Users, BarChart3, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
 // Force dynamic rendering to avoid build-time Sanity client creation
 export const dynamic = 'force-dynamic'
 
-export default async function SliderAssessmentPage() {
-  const sliders = await getAllSliders()
+export default async function ThisOrThatPage() {
+  const instances = await getAllInstances()
 
   return (
     <div className="min-h-screen bg-background">
@@ -18,17 +18,17 @@ export default async function SliderAssessmentPage() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
-                <Sliders className="w-5 h-5 text-white" />
+              <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                <Image className="w-5 h-5 text-white" />
               </div>
-              <h1 className="text-xl font-bold text-foreground">Slider Assessment</h1>
+              <h1 className="text-xl font-bold text-foreground">This or That</h1>
             </div>
             <nav className="hidden md:flex items-center space-x-6">
               <Link href="/" className="text-muted-foreground hover:text-foreground transition-colors">
                 Home
               </Link>
-              <Link href="/image-voting" className="text-muted-foreground hover:text-foreground transition-colors">
-                Image Voting
+              <Link href="/sliders" className="text-muted-foreground hover:text-foreground transition-colors">
+                Sliders
               </Link>
               <Link href="/admin" className="text-muted-foreground hover:text-foreground transition-colors">
                 Admin
@@ -52,80 +52,80 @@ export default async function SliderAssessmentPage() {
 
         {/* Hero Section */}
         <div className="text-center mb-12">
-          <div className="w-16 h-16 bg-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <Sliders className="w-8 h-8 text-white" />
+          <div className="w-16 h-16 bg-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <Image className="w-8 h-8 text-white" />
           </div>
-          <h2 className="text-4xl font-bold text-foreground mb-4 text-balance">Slider Assessment</h2>
+          <h2 className="text-4xl font-bold text-foreground mb-4 text-balance">This or That</h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto text-pretty mb-8">
-            Interactive slider-based preference analysis tool. Perfect for understanding user preferences, 
-            product positioning, and market research through intuitive slider interactions.
+            Interactive &quot;This or That&quot; style voting with timed decisions. Perfect for design preference testing, 
+            brand research, and user experience insights.
           </p>
           
           {/* Features */}
           <div className="flex flex-wrap justify-center gap-4 mb-8">
             <div className="flex items-center gap-2 bg-muted/50 px-4 py-2 rounded-lg">
-              <TrendingUp className="w-4 h-4 text-purple-500" />
-              <span className="text-sm font-medium">Preference Analysis</span>
+              <Clock className="w-4 h-4 text-blue-500" />
+              <span className="text-sm font-medium">Timed Decisions</span>
             </div>
             <div className="flex items-center gap-2 bg-muted/50 px-4 py-2 rounded-lg">
-              <Users className="w-4 h-4 text-purple-500" />
+              <Users className="w-4 h-4 text-blue-500" />
               <span className="text-sm font-medium">User Insights</span>
             </div>
             <div className="flex items-center gap-2 bg-muted/50 px-4 py-2 rounded-lg">
-              <BarChart3 className="w-4 h-4 text-purple-500" />
-              <span className="text-sm font-medium">Data Collection</span>
+              <BarChart3 className="w-4 h-4 text-blue-500" />
+              <span className="text-sm font-medium">Analytics</span>
             </div>
           </div>
         </div>
 
-        {/* Available Assessments */}
+        {/* Available Instances */}
         <div className="mb-8">
           <h3 className="text-2xl font-bold text-foreground mb-6">Available Assessments</h3>
           
-          {sliders.length === 0 ? (
+          {instances.length === 0 ? (
             <div className="text-center py-12">
               <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                <Sliders className="w-8 h-8 text-muted-foreground" />
+                <Image className="w-8 h-8 text-muted-foreground" />
               </div>
               <h4 className="text-xl font-semibold text-foreground mb-2">No Assessments Available</h4>
               <p className="text-muted-foreground mb-4">
-                No slider assessments have been created yet. Check back soon!
+                No This or That assessments have been created yet. Check back soon!
               </p>
             </div>
           ) : (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {sliders.map((slider) => (
-                <Card key={slider.id} className="hover:shadow-lg transition-shadow">
+              {instances.map((instance) => (
+                <Card key={instance.id} className="hover:shadow-lg transition-shadow">
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div>
-                        <CardTitle className="text-lg mb-2">{slider.title}</CardTitle>
-                        {slider.description && (
+                        <CardTitle className="text-lg mb-2">{instance.title}</CardTitle>
+                        {instance.description && (
                           <CardDescription className="line-clamp-2">
-                            {slider.description}
+                            {instance.description}
                           </CardDescription>
                         )}
                       </div>
-                      <Badge variant="secondary" className="bg-purple-100 text-purple-800">
-                        <Sliders className="w-3 h-3 mr-1" />
-                        Slider
+                      <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                        <Clock className="w-3 h-3 mr-1" />
+                        {instance.timerLength}s
                       </Badge>
                     </div>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2 mb-4">
                       <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Slider Pairs:</span>
-                        <span className="font-medium">{slider.sliderPairs.length}</span>
+                        <span className="text-muted-foreground">Image Pairs:</span>
+                        <span className="font-medium">{instance.imagePairs.length}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Estimated Time:</span>
-                        <span className="font-medium">{Math.ceil(slider.sliderPairs.length * 2)} min</span>
+                        <span className="font-medium">{Math.ceil(instance.imagePairs.length * instance.timerLength / 60)} min</span>
                       </div>
                     </div>
-                    <Link href={`/sliders/${slider.slug}`} className="w-full">
-                      <Button className="w-full bg-purple-500 hover:bg-purple-600">
-                        Start Assessment
+                    <Link href={`/this-or-that/${instance.slug}`} className="w-full">
+                      <Button className="w-full bg-blue-500 hover:bg-blue-600">
+                        Start Voting
                       </Button>
                     </Link>
                   </CardContent>
@@ -137,61 +137,43 @@ export default async function SliderAssessmentPage() {
 
         {/* How It Works */}
         <div className="bg-muted/30 rounded-lg p-8 mb-8">
-          <h3 className="text-2xl font-bold text-foreground mb-6 text-center">How Slider Assessment Works</h3>
+          <h3 className="text-2xl font-bold text-foreground mb-6 text-center">How This or That Works</h3>
           <div className="grid md:grid-cols-3 gap-6">
             <div className="text-center">
-              <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center mx-auto mb-4">
+              <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mx-auto mb-4">
                 <span className="text-white font-bold">1</span>
               </div>
               <h4 className="font-semibold mb-2">Choose Your Assessment</h4>
               <p className="text-sm text-muted-foreground">
-                Select from available slider assessments designed for your specific research goals.
+                Select from available This or That assessments based on your research needs.
               </p>
             </div>
             <div className="text-center">
-              <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center mx-auto mb-4">
+              <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mx-auto mb-4">
                 <span className="text-white font-bold">2</span>
               </div>
-              <h4 className="font-semibold mb-2">Adjust Sliders</h4>
+              <h4 className="font-semibold mb-2">Vote on Image Pairs</h4>
               <p className="text-sm text-muted-foreground">
-                Use intuitive sliders to express preferences between different options or concepts.
+                Quickly choose between two images within the time limit to capture authentic preferences.
               </p>
             </div>
             <div className="text-center">
-              <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center mx-auto mb-4">
+              <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mx-auto mb-4">
                 <span className="text-white font-bold">3</span>
               </div>
-              <h4 className="font-semibold mb-2">Analyze Results</h4>
+              <h4 className="font-semibold mb-2">Get Insights</h4>
               <p className="text-sm text-muted-foreground">
-                Review detailed analytics and preference patterns to inform your decisions.
+                View results and analytics to understand user preferences and make data-driven decisions.
               </p>
             </div>
-          </div>
-        </div>
-
-        {/* Benefits */}
-        <div className="grid md:grid-cols-2 gap-8 mb-8">
-          <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-6">
-            <h4 className="font-semibold text-purple-900 mb-3">Perfect for Market Research</h4>
-            <p className="text-sm text-purple-700">
-              Understand customer preferences, product positioning, and brand perception through 
-              intuitive slider interactions that capture nuanced opinions.
-            </p>
-          </div>
-          <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-6">
-            <h4 className="font-semibold text-purple-900 mb-3">User Experience Testing</h4>
-            <p className="text-sm text-purple-700">
-              Gather detailed feedback on design elements, feature preferences, and user satisfaction 
-              with precise slider-based data collection.
-            </p>
           </div>
         </div>
 
         {/* Call to Action */}
-        <div className="text-center py-12 bg-purple-50 rounded-lg">
+        <div className="text-center py-12 bg-blue-50 rounded-lg">
           <h3 className="text-2xl font-bold text-foreground mb-4">Ready to Start?</h3>
           <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-            Choose an assessment above to begin collecting user preferences through slider interactions.
+            Choose an assessment above to begin collecting user feedback through This or That voting.
           </p>
           <Link href="/">
             <Button variant="outline" className="bg-white">
@@ -212,8 +194,8 @@ export default async function SliderAssessmentPage() {
             <Link href="/" className="hover:text-accent transition-colors">
               Home
             </Link>
-            <Link href="/image-voting" className="hover:text-accent transition-colors">
-              Image Voting
+            <Link href="/sliders" className="hover:text-accent transition-colors">
+              Sliders
             </Link>
           </div>
         </div>
