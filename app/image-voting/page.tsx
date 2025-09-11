@@ -8,7 +8,7 @@ import Link from 'next/link'
 // Force dynamic rendering to avoid build-time Sanity client creation
 export const dynamic = 'force-dynamic'
 
-export default async function ThisOrThatPage() {
+export default async function ImageVotingPage() {
   const instances = await getAllInstances()
 
   return (
@@ -21,14 +21,15 @@ export default async function ThisOrThatPage() {
               <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
                 <Image className="w-5 h-5 text-white" />
               </div>
-              <h1 className="text-xl font-bold text-foreground">This or That</h1>
+              <h1 className="text-xl font-bold text-foreground">Image Voting</h1>
             </div>
             <nav className="hidden md:flex items-center space-x-6">
               <Link href="/" className="text-muted-foreground hover:text-foreground transition-colors">
                 Home
               </Link>
-              <Link href="/sliders" className="text-muted-foreground hover:text-foreground transition-colors">
-                Sliders
+              <Link href="/slider-assessment" className="text-muted-foreground hover:text-foreground transition-colors">
+              
+                Slider Assessment
               </Link>
               <Link href="/admin" className="text-muted-foreground hover:text-foreground transition-colors">
                 Admin
@@ -55,20 +56,26 @@ export default async function ThisOrThatPage() {
           <div className="w-16 h-16 bg-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
             <Image className="w-8 h-8 text-white" />
           </div>
-          <h2 className="text-4xl font-bold text-foreground mb-4 text-balance">This or That</h2>
+          <h2 className="text-4xl font-bold text-foreground mb-4 text-balance">Image Voting</h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto text-pretty mb-8">
             Interactive &quot;This or That&quot; style voting with timed decisions. Perfect for design preference testing, 
             brand research, and user experience insights.
           </p>
           
-          {/* Categories */}
+          {/* Features */}
           <div className="flex flex-wrap justify-center gap-4 mb-8">
-            <Badge variant="secondary" className="bg-blue-100 text-blue-800 px-4 py-2">
-              Design
-            </Badge>
-            <Badge variant="secondary" className="bg-green-100 text-green-800 px-4 py-2">
-              Strategy
-            </Badge>
+            <div className="flex items-center gap-2 bg-muted/50 px-4 py-2 rounded-lg">
+              <Clock className="w-4 h-4 text-blue-500" />
+              <span className="text-sm font-medium">Timed Decisions</span>
+            </div>
+            <div className="flex items-center gap-2 bg-muted/50 px-4 py-2 rounded-lg">
+              <Users className="w-4 h-4 text-blue-500" />
+              <span className="text-sm font-medium">User Insights</span>
+            </div>
+            <div className="flex items-center gap-2 bg-muted/50 px-4 py-2 rounded-lg">
+              <BarChart3 className="w-4 h-4 text-blue-500" />
+              <span className="text-sm font-medium">Analytics</span>
+            </div>
           </div>
         </div>
 
@@ -83,7 +90,7 @@ export default async function ThisOrThatPage() {
               </div>
               <h4 className="text-xl font-semibold text-foreground mb-2">No Assessments Available</h4>
               <p className="text-muted-foreground mb-4">
-                No This or That assessments have been created yet. Check back soon!
+                No image voting assessments have been created yet. Check back soon!
               </p>
             </div>
           ) : (
@@ -131,7 +138,7 @@ export default async function ThisOrThatPage() {
 
         {/* How It Works */}
         <div className="bg-muted/30 rounded-lg p-8 mb-8">
-          <h3 className="text-2xl font-bold text-foreground mb-6 text-center">How This or That Works</h3>
+          <h3 className="text-2xl font-bold text-foreground mb-6 text-center">How Image Voting Works</h3>
           <div className="grid md:grid-cols-3 gap-6">
             <div className="text-center">
               <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mx-auto mb-4">
@@ -139,7 +146,7 @@ export default async function ThisOrThatPage() {
               </div>
               <h4 className="font-semibold mb-2">Choose Your Assessment</h4>
               <p className="text-sm text-muted-foreground">
-                Select from available This or That assessments based on your research needs.
+                Select from available image voting assessments based on your research needs.
               </p>
             </div>
             <div className="text-center">
@@ -167,7 +174,7 @@ export default async function ThisOrThatPage() {
         <div className="text-center py-12 bg-blue-50 rounded-lg">
           <h3 className="text-2xl font-bold text-foreground mb-4">Ready to Start?</h3>
           <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-            Choose an assessment above to begin collecting user feedback through This or That voting.
+            Choose an assessment above to begin collecting user feedback through image voting.
           </p>
           <Link href="/">
             <Button variant="outline" className="bg-white">
@@ -188,8 +195,8 @@ export default async function ThisOrThatPage() {
             <Link href="/" className="hover:text-accent transition-colors">
               Home
             </Link>
-            <Link href="/sliders" className="hover:text-accent transition-colors">
-              Sliders
+            <Link href="/slider-assessment" className="hover:text-accent transition-colors">
+              Slider Assessment
             </Link>
           </div>
         </div>

@@ -17,6 +17,7 @@ interface AppVariant {
   features: string[]
   color: string
   type: 'image-voting' | 'slider-assessment'
+  categories: string[]
 }
 
 const categoryIcons = {
@@ -56,7 +57,8 @@ export function AppShowcase({ instances, sliders }: AppShowcaseProps) {
           "Session Analytics"
         ],
         color: "bg-blue-500",
-        type: 'image-voting'
+        type: 'image-voting',
+        categories: ["Design", "Strategy"]
       })
     }
 
@@ -76,7 +78,8 @@ export function AppShowcase({ instances, sliders }: AppShowcaseProps) {
           "Results Tracking"
         ],
         color: "bg-purple-500",
-        type: 'slider-assessment'
+        type: 'slider-assessment',
+        categories: ["Strategy", "Technology"]
       })
     }
 
