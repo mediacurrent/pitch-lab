@@ -113,7 +113,7 @@ export function AppShowcase({ instances, sliders }: AppShowcaseProps) {
       <main className="container mx-auto px-4 py-8">
 
         {/* Category Filter */}
-        <div className="flex flex-wrap justify-start gap-2 mb-8">
+        <div className="flex flex-wrap justify-start gap-2 mb-16">
           {categories.map((category) => (
             <Button
               key={category}
