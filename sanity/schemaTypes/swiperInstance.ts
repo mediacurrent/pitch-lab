@@ -89,7 +89,6 @@ export default defineType({
               return {
                 title: name || `Website ${order || 'Untitled'}`,
                 subtitle: description || 'No description',
-                media: '🌐',
               }
             },
           },
