@@ -117,9 +117,13 @@ export function AppShowcase({ instances, sliders }: AppShowcaseProps) {
           {categories.map((category) => (
             <Button
               key={category}
-              variant={selectedCategory === category ? "default" : "outline"}
+              variant="outline"
               onClick={() => setSelectedCategory(category)}
-              className="transition-all duration-200"
+              className={`transition-all duration-200 rounded-full ${
+                selectedCategory === category 
+                  ? "bg-black text-white border-black hover:bg-black hover:text-white" 
+                  : "hover:bg-gray-100"
+              }`}
             >
               {category}
             </Button>
