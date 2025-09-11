@@ -61,14 +61,20 @@ export default async function SlidersPage() {
             product positioning, and market research through intuitive slider interactions.
           </p>
           
-          {/* Categories */}
+          {/* Features */}
           <div className="flex flex-wrap justify-center gap-4 mb-8">
-            <Badge variant="secondary" className="bg-green-100 text-green-800 px-4 py-2">
-              Strategy
-            </Badge>
-            <Badge variant="secondary" className="bg-purple-100 text-purple-800 px-4 py-2">
-              Technology
-            </Badge>
+            <div className="flex items-center gap-2 bg-muted/50 px-4 py-2 rounded-lg">
+              <TrendingUp className="w-4 h-4 text-purple-500" />
+              <span className="text-sm font-medium">Preference Analysis</span>
+            </div>
+            <div className="flex items-center gap-2 bg-muted/50 px-4 py-2 rounded-lg">
+              <Users className="w-4 h-4 text-purple-500" />
+              <span className="text-sm font-medium">User Insights</span>
+            </div>
+            <div className="flex items-center gap-2 bg-muted/50 px-4 py-2 rounded-lg">
+              <BarChart3 className="w-4 h-4 text-purple-500" />
+              <span className="text-sm font-medium">Data Collection</span>
+            </div>
           </div>
         </div>
 

@@ -61,14 +61,20 @@ export default async function ThisOrThatPage() {
             brand research, and user experience insights.
           </p>
           
-          {/* Categories */}
+          {/* Features */}
           <div className="flex flex-wrap justify-center gap-4 mb-8">
-            <Badge variant="secondary" className="bg-blue-100 text-blue-800 px-4 py-2">
-              Design
-            </Badge>
-            <Badge variant="secondary" className="bg-green-100 text-green-800 px-4 py-2">
-              Strategy
-            </Badge>
+            <div className="flex items-center gap-2 bg-muted/50 px-4 py-2 rounded-lg">
+              <Clock className="w-4 h-4 text-blue-500" />
+              <span className="text-sm font-medium">Timed Decisions</span>
+            </div>
+            <div className="flex items-center gap-2 bg-muted/50 px-4 py-2 rounded-lg">
+              <Users className="w-4 h-4 text-blue-500" />
+              <span className="text-sm font-medium">User Insights</span>
+            </div>
+            <div className="flex items-center gap-2 bg-muted/50 px-4 py-2 rounded-lg">
+              <BarChart3 className="w-4 h-4 text-blue-500" />
+              <span className="text-sm font-medium">Analytics</span>
+            </div>
           </div>
         </div>
 

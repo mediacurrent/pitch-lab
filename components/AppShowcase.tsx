@@ -87,10 +87,11 @@ export function AppShowcase({ instances, sliders }: AppShowcaseProps) {
   }
 
   const apps = transformToApps()
-  const categories = ["All", ...Array.from(new Set(apps.map((app) => app.category)))]
+  const allCategories = Array.from(new Set(apps.flatMap((app) => app.categories)))
+  const categories = ["All", ...allCategories]
 
   const filteredApps =
-    selectedCategory === "All" ? apps : apps.filter((app) => app.category === selectedCategory)
+    selectedCategory === "All" ? apps : apps.filter((app) => app.categories.includes(selectedCategory))
 
   return (
     <div className="min-h-screen bg-background">
