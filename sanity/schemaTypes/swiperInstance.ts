@@ -1,4 +1,5 @@
 import { defineType, defineField } from 'sanity'
+import { CsvUploadInput } from '../components/CsvUploadInput'
 
 export default defineType({
   name: 'swiperInstance',
@@ -31,6 +32,10 @@ export default defineType({
       name: 'websites',
       title: 'Websites',
       type: 'array',
+      components: {
+        input: CsvUploadInput,
+      },
+      description: 'Upload a CSV file to bulk add websites, or manually add them below',
       of: [
         {
           type: 'object',
