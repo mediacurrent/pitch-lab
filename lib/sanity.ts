@@ -155,6 +155,27 @@ export interface SliderInstance {
   sliderPairs: SliderPairEntry[]
 }
 
+// New interfaces for Swiper instances
+export interface WebsiteEntry {
+  id: number
+  name: string
+  description: string
+  cms: string
+  dept: string
+  category: string
+  order: number
+}
+
+export interface SwiperInstance {
+  id: string
+  title: string
+  description?: string
+  slug: string
+  isActive: boolean
+  createdBy: string
+  websites: WebsiteEntry[]
+}
+
 // Fetch all active Pitch Lab
 export async function getAllInstances(): Promise<ThisOrThatInstance[]> {
   if (!client) {
@@ -514,6 +535,180 @@ export async function getSliderSessionsForInstance(sliderId: string): Promise<an
     return sessions || []
   } catch (error) {
     console.error('Error fetching slider sessions from Sanity:', error)
+    return []
+  }
+}
+
+// Fetch all active Swipers
+export async function getAllSwipers(): Promise<SwiperInstance[]> {
+  if (!client) {
+    console.error('Sanity client not configured')
+    return []
+  }
+  
+  try {
+    const query = `*[_type == "swiperInstance" && isActive == true] {
+      _id,
+      title,
+      description,
+      "slug": slug.current,
+      isActive,
+      createdBy,
+      websites[]{
+        id,
+        name,
+        description,
+        cms,
+        dept,
+        category,
+        order
+      }
+    } | order(_createdAt desc)`
+
+    const swipers = await client.fetch(query)
+    
+    return swipers.map((swiper: any) => ({
+      id: swiper._id,
+      title: swiper.title || '',
+      description: swiper.description || '',
+      slug: swiper.slug || '',
+      isActive: swiper.isActive || false,
+      createdBy: swiper.createdBy || 'Unknown',
+      websites: (swiper.websites || []).map((website: any) => ({
+        id: website.id || 0,
+        name: website.name || '',
+        description: website.description || '',
+        cms: website.cms || '',
+        dept: website.dept || '',
+        category: website.category || '',
+        order: website.order || 0,
+      })).sort((a: any, b: any) => a.order - b.order),
+    }))
+  } catch (error) {
+    console.error('Error fetching swipers from Sanity:', error)
+    return []
+  }
+}
+
+// Fetch a specific Swiper by slug
+export async function getSwiperBySlug(slug: string): Promise<SwiperInstance | null> {
+  if (!client) {
+    console.error('Sanity client not configured')
+    return null
+  }
+  
+  try {
+    const query = `*[_type == "swiperInstance" && slug.current == $slug && isActive == true][0] {
+      _id,
+      title,
+      description,
+      "slug": slug.current,
+      isActive,
+      createdBy,
+      websites[]{
+        id,
+        name,
+        description,
+        cms,
+        dept,
+        category,
+        order
+      }
+    }`
+
+    const swiper = await client.fetch(query, { slug })
+
+    if (!swiper) return null
+
+    return {
+      id: swiper._id,
+      title: swiper.title || '',
+      description: swiper.description || '',
+      slug: swiper.slug || '',
+      isActive: swiper.isActive || false,
+      createdBy: swiper.createdBy || 'Unknown',
+      websites: (swiper.websites || []).map((website: any) => ({
+        id: website.id || 0,
+        name: website.name || '',
+        description: website.description || '',
+        cms: website.cms || '',
+        dept: website.dept || '',
+        category: website.category || '',
+        order: website.order || 0,
+      })).sort((a: any, b: any) => a.order - b.order),
+    }
+  } catch (error) {
+    console.error('Error fetching swiper by slug from Sanity:', error)
+    return null
+  }
+}
+
+// Interface for swiper session data
+export interface SwiperSessionData {
+  sessionId: string
+  swiperId: string
+  swiperTitle: string
+  keptWebsites: string[]
+  killedWebsites: string[]
+  skippedWebsites: string[]
+  totalTime: number
+  userAgent: string
+}
+
+// Save a swiper session to Sanity
+export async function saveSwiperSession(sessionData: SwiperSessionData): Promise<string | null> {
+  if (!writeClient) {
+    console.error('Sanity write client not configured')
+    return null
+  }
+  
+  try {
+    const doc = {
+      _type: 'swiperSession',
+      sessionId: sessionData.sessionId,
+      swiperInstance: {
+        _type: 'reference',
+        _ref: sessionData.swiperId,
+      },
+      keptWebsites: sessionData.keptWebsites,
+      killedWebsites: sessionData.killedWebsites,
+      skippedWebsites: sessionData.skippedWebsites,
+      totalTime: sessionData.totalTime,
+      userAgent: sessionData.userAgent,
+      timestamp: new Date().toISOString(),
+    }
+
+    const result = await writeClient.create(doc)
+    return result._id
+  } catch (error) {
+    console.error('Error saving swiper session to Sanity:', error)
+    return null
+  }
+}
+
+// Fetch swiper sessions for a specific swiper
+export async function getSwiperSessionsForInstance(swiperId: string): Promise<any[]> {
+  if (!client) {
+    console.error('Sanity client not configured')
+    return []
+  }
+  
+  try {
+    const query = `*[_type == "swiperSession" && swiperInstance._ref == $swiperId] | order(timestamp desc) {
+      _id,
+      sessionId,
+      timestamp,
+      keptWebsites,
+      killedWebsites,
+      skippedWebsites,
+      totalTime,
+      userAgent
+    }`
+
+    const sessions = await client.fetch(query, { swiperId })
+    return sessions || []
+  } catch (error) {
+    console.error('Error fetching swiper sessions from Sanity:', error)
     return []
   }
 } 

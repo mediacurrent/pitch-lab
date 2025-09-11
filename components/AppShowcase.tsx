@@ -4,8 +4,8 @@ import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ExternalLink, Image, Sliders, Users, BarChart3, Clock, Palette } from "lucide-react"
-import { ThisOrThatInstance, SliderInstance } from "@/lib/sanity"
+import { ExternalLink, Image, Sliders, Users, BarChart3, Clock, Palette, Smartphone } from "lucide-react"
+import { ThisOrThatInstance, SliderInstance, SwiperInstance } from "@/lib/sanity"
 
 interface AppVariant {
   id: string
@@ -16,13 +16,14 @@ interface AppVariant {
   demoUrl: string
   features: string[]
   color: string
-  type: 'image-voting' | 'slider-assessment'
+  type: 'image-voting' | 'slider-assessment' | 'swiper'
   categories: string[]
 }
 
 const categoryIcons = {
   "This or That": Image,
   "Sliders": Sliders,
+  "Swiper": Smartphone,
   "Research": BarChart3,
   "User Testing": Users,
   "Quick Poll": Clock,
@@ -32,9 +33,10 @@ const categoryIcons = {
 interface AppShowcaseProps {
   instances: ThisOrThatInstance[]
   sliders: SliderInstance[]
+  swipers: SwiperInstance[]
 }
 
-export function AppShowcase({ instances, sliders }: AppShowcaseProps) {
+export function AppShowcase({ instances, sliders, swipers }: AppShowcaseProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>("All")
 
   // Transform Pitch Lab data into app showcase format
@@ -80,6 +82,27 @@ export function AppShowcase({ instances, sliders }: AppShowcaseProps) {
         color: "bg-purple-500",
         type: 'slider-assessment',
         categories: ["Strategy", "Technology"]
+      })
+    }
+
+    // Add Swiper app type (if there are any swipers)
+    if (swipers.length > 0) {
+      apps.push({
+        id: "swiper",
+        name: "Swiper",
+        description: "Tinder-like swiping interface for rapid decision making. Perfect for website evaluation, content curation, and preference testing.",
+        category: "Swiper",
+        image: "/placeholder.jpg",
+        demoUrl: "/swiper",
+        features: [
+          `${swipers.length} Available Assessments`,
+          "Swipe Interface",
+          "Rapid Decisions",
+          "Session Analytics"
+        ],
+        color: "bg-green-500",
+        type: 'swiper',
+        categories: ["Design", "Strategy", "Technology"]
       })
     }
 
