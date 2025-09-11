@@ -23,7 +23,7 @@ interface AppVariant {
 const categoryIcons = {
   "This or That": Image,
   "Sliders": Sliders,
-  "Swiper": Smartphone,
+  "Keep, Kill, Merge": Smartphone,
   "Research": BarChart3,
   "User Testing": Users,
   "Quick Poll": Clock,
@@ -85,26 +85,24 @@ export function AppShowcase({ instances, sliders, swipers }: AppShowcaseProps) {
       })
     }
 
-    // Add Swiper app type (if there are any swipers)
-    if (swipers.length > 0) {
-      apps.push({
-        id: "swiper",
-        name: "Swiper",
-        description: "Tinder-like swiping interface for rapid decision making. Perfect for website evaluation, content curation, and preference testing.",
-        category: "Swiper",
-        image: "/placeholder.jpg",
-        demoUrl: "/swiper",
-        features: [
-          `${swipers.length} Available Assessments`,
-          "Swipe Interface",
-          "Rapid Decisions",
-          "Session Analytics"
-        ],
-        color: "bg-green-500",
-        type: 'swiper',
-        categories: ["Design", "Strategy", "Technology"]
-      })
-    }
+    // Add Swiper app type (always show, like other apps)
+    apps.push({
+      id: "swiper",
+      name: "Keep, Kill, Merge",
+      description: "Tinder-like swiping interface for rapid decision making. Perfect for website evaluation, content curation, and preference testing.",
+      category: "Keep, Kill, Merge",
+      image: "/placeholder.jpg",
+      demoUrl: "/swiper",
+      features: [
+        `${swipers.length} Available Assessments`,
+        "Swipe Interface",
+        "Rapid Decisions",
+        "Session Analytics"
+      ],
+      color: "bg-green-500",
+      type: 'swiper',
+      categories: ["Design", "Strategy", "Technology"]
+    })
 
     return apps
   }

@@ -46,7 +46,7 @@ export default async function SwiperLandingPage() {
             </div>
           </div>
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            Swiper
+            Keep, Kill, Merge
           </h1>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
             Tinder-like swiping interface for rapid decision making. Perfect for website evaluation, content curation, and preference testing.
@@ -117,7 +117,7 @@ export default async function SwiperLandingPage() {
               <div className="w-16 h-16 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <Smartphone className="w-8 h-8 text-muted-foreground" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">No Swiper Assessments Available</h3>
+              <h3 className="text-xl font-semibold mb-2">No Keep, Kill, Merge Assessments Available</h3>
               <p className="text-muted-foreground mb-6">
                 Check back later for new swiper-based assessments.
               </p>
@@ -136,7 +136,7 @@ export default async function SwiperLandingPage() {
       <section className="py-16 px-4 bg-muted/50">
         <div className="container mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Why Use Swiper?</h2>
+            <h2 className="text-3xl font-bold mb-4">Why Use Keep, Kill, Merge?</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               Our swiper interface makes decision-making fast, intuitive, and engaging
             </p>
