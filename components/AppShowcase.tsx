@@ -154,8 +154,8 @@ export function AppShowcase({ instances, sliders }: AppShowcaseProps) {
                 onClick={() => window.location.href = app.demoUrl}
               >
                 <CardHeader className="p-0">
-                  <div className="relative overflow-hidden rounded-t-lg">
-                    <div className="overflow-hidden rounded-t-lg">
+                  <div className="relative overflow-hidden rounded-t-xl">
+                    <div className="overflow-hidden rounded-t-xl">
                       <img
                         src={app.image || "/placeholder.jpg"}
                         alt={app.name}
