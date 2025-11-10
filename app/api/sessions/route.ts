@@ -33,59 +33,78 @@ export async function POST(request: NextRequest) {
   });
   
   try {
-    // Create a server-side Sanity client with write permissions
-    let client;
-    try {
-      client = createClient({
-        projectId: process.env.SANITY_PROJECT_ID || process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
-        dataset: process.env.SANITY_DATASET || process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
-        apiVersion: '2025-07-25',
-        token: process.env.SANITY_TOKEN || process.env.SANITY_API_TOKEN,
-        useCdn: false,
-      });
-      console.log('Sanity client created successfully');
-    } catch (clientError) {
-      console.error('Failed to create Sanity client:', clientError);
-      return NextResponse.json(
-        { error: 'Failed to create Sanity client', details: clientError instanceof Error ? clientError.message : 'Unknown error' },
-        { status: 500 }
-      );
-    }
-
-    // Validate environment variables
+    // Validate environment variables BEFORE creating client
     const projectId = process.env.SANITY_PROJECT_ID || process.env.NEXT_PUBLIC_SANITY_PROJECT_ID;
     if (!projectId) {
       console.error('Missing SANITY_PROJECT_ID or NEXT_PUBLIC_SANITY_PROJECT_ID')
       return NextResponse.json(
         { 
           error: 'Sanity project ID not configured',
-          details: 'The SANITY_PROJECT_ID (preferred) or NEXT_PUBLIC_SANITY_PROJECT_ID environment variable is missing in production. Please add it to your Vercel environment variables.',
+          details: 'The SANITY_PROJECT_ID (preferred) or NEXT_PUBLIC_SANITY_PROJECT_ID environment variable is missing. Please add it to your Vercel environment variables.',
           env: {
             hasProjectId: false,
-            hasToken: !!process.env.SANITY_TOKEN,
-            tokenLength: process.env.SANITY_TOKEN?.length || 0,
+            hasSanityProjectId: !!process.env.SANITY_PROJECT_ID,
+            hasNextPublicProjectId: !!process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
+            hasToken: !!token,
+            tokenLength: token?.length || 0,
           }
         },
         { status: 500 }
       )
     }
 
-    const token = process.env.SANITY_TOKEN || process.env.SANITY_API_TOKEN
+    const dataset = process.env.SANITY_DATASET || process.env.NEXT_PUBLIC_SANITY_DATASET || 'production';
+    
     if (!token) {
       console.error('Missing SANITY_TOKEN or SANITY_API_TOKEN')
       return NextResponse.json(
         { 
           error: 'Sanity token not configured',
-          details: 'The SANITY_TOKEN or SANITY_API_TOKEN environment variable is missing in production. Please add it to your Vercel environment variables.'
+          details: 'The SANITY_TOKEN or SANITY_API_TOKEN environment variable is missing. Please add it to your Vercel environment variables.',
+          env: {
+            hasProjectId: !!projectId,
+            hasToken: false,
+            hasSanityToken: !!process.env.SANITY_TOKEN,
+            hasSanityApiToken: !!process.env.SANITY_API_TOKEN,
+          }
         },
         { status: 500 }
       )
     }
 
+    // Create a server-side Sanity client with write permissions
+    let client;
+    try {
+      client = createClient({
+        projectId,
+        dataset,
+        apiVersion: '2025-07-25',
+        token,
+        useCdn: false,
+      });
+      console.log('Sanity client created successfully');
+    } catch (clientError) {
+      console.error('Failed to create Sanity client:', clientError);
+      return NextResponse.json(
+        { 
+          error: 'Failed to create Sanity client', 
+          details: clientError instanceof Error ? clientError.message : 'Unknown error',
+          config: {
+            hasProjectId: !!projectId,
+            hasDataset: !!dataset,
+            hasToken: !!token,
+            projectIdLength: projectId?.length || 0,
+            tokenLength: token?.length || 0,
+          }
+        },
+        { status: 500 }
+      );
+    }
+
     // Debug logging
     console.log('API Route: Environment variables check:')
-    console.log('Project ID:', process.env.NEXT_PUBLIC_SANITY_PROJECT_ID)
-    console.log('Dataset:', process.env.NEXT_PUBLIC_SANITY_DATASET)
+    console.log('Project ID:', projectId)
+    console.log('Dataset:', dataset)
     console.log('Token exists:', !!token)
     console.log('Token length:', token?.length)
 
