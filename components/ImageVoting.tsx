@@ -183,39 +183,45 @@ export function ImageVoting({
 
   const handleSubmit = async () => {
     try {
+      const sessionData = {
+        userName: userName || 'Anonymous',
+        instanceId,
+        instanceTitle,
+        votes,
+        summary: {
+          totalVotes: votes.length,
+          leftVotes: votes.filter(v => v.selectedImage === 'left').length,
+          rightVotes: votes.filter(v => v.selectedImage === 'right').length,
+          timeoutVotes: votes.filter(v => v.selectedImage === 'timeout').length,
+          averageTimePerVote: votes.length > 0 ? votes.reduce((sum, v) => sum + v.timeSpent, 0) / votes.length : 0
+        }
+      }
+
       const response = await fetch('/api/sessions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          userName: userName || 'Anonymous',
-          instanceId,
-          instanceTitle,
-          votes,
-          summary: {
-            totalVotes: votes.length,
-            leftVotes: votes.filter(v => v.selectedImage === 'left').length,
-            rightVotes: votes.filter(v => v.selectedImage === 'right').length,
-            timeoutVotes: votes.filter(v => v.selectedImage === 'timeout').length,
-            averageTimePerVote: votes.reduce((sum, v) => sum + v.timeSpent, 0) / votes.length
-          }
-        }),
+        body: JSON.stringify(sessionData),
       })
 
-      if (response.ok) {
-        toast.success('Voting session saved successfully!')
-        // Reset for new session
-        setVotes([])
-        setCurrentIndex(0)
-        setShowSummary(false)
-        resetTimer()
-      } else {
-        throw new Error('Failed to save session')
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        console.error('API Error:', errorData)
+        throw new Error(errorData.error || errorData.details || 'Failed to save session')
       }
+
+      const result = await response.json()
+      toast.success('Voting session saved successfully!')
+      // Reset for new session
+      setVotes([])
+      setCurrentIndex(0)
+      setShowSummary(false)
+      resetTimer()
     } catch (error) {
       console.error('Error saving session:', error)
-      toast.error('Failed to save voting session')
+      const errorMessage = error instanceof Error ? error.message : 'Failed to save voting session'
+      toast.error(errorMessage)
     }
   }
 
