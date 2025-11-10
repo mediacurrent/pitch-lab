@@ -52,8 +52,6 @@ export function ImageVoting({
   instanceDescription,
   instanceId
 }: ImageVotingProps) {
-  console.log('ImageVoting render:', { timerLength, imagesLength: images.length })
-  
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isActive, setIsActive] = useState(false)
   const [timeLeft, setTimeLeft] = useState(timerLength)
@@ -127,33 +125,31 @@ export function ImageVoting({
 
   // Timer effect
   useEffect(() => {
-    console.log('Timer effect running:', { isActive, isPaused, timeLeft })
+    if (!isActive || isPaused) {
+      return
+    }
+
     let interval: NodeJS.Timeout | null = null
 
-    if (isActive && !isPaused && timeLeft > 0) {
-      console.log('Starting timer interval')
-      interval = setInterval(() => {
-        setTimeLeft((prev) => {
-          console.log('Timer tick:', prev)
-          if (prev <= 1) {
-            // Time's up - record timeout
-            if (timeoutHandlerRef.current) {
-              timeoutHandlerRef.current()
-            }
-            return 0
+    interval = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          // Time's up - record timeout
+          if (timeoutHandlerRef.current) {
+            timeoutHandlerRef.current()
           }
-          return prev - 1
-        })
-      }, 1000)
-    }
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
 
     return () => {
       if (interval) {
-        console.log('Clearing timer interval')
         clearInterval(interval)
       }
     }
-  }, [isActive, isPaused, timeLeft])
+  }, [isActive, isPaused])
 
   // Update the timeout handler ref when handleTimeout changes
   useEffect(() => {
@@ -161,7 +157,6 @@ export function ImageVoting({
   }, [handleTimeout])
 
   const startTimer = useCallback(() => {
-    console.log('startTimer called, setting timer states')
     setIsActive(true)
     setHasStarted(true)
     setTimeLeft(timerLength)

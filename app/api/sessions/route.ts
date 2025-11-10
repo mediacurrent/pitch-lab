@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
         projectId: process.env.SANITY_PROJECT_ID || process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
         dataset: process.env.SANITY_DATASET || process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
         apiVersion: '2025-07-25',
-        token: process.env.SANITY_TOKEN,
+        token: process.env.SANITY_TOKEN || process.env.SANITY_API_TOKEN,
         useCdn: false,
       });
       console.log('Sanity client created successfully');
@@ -67,12 +67,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!process.env.SANITY_TOKEN) {
-      console.error('Missing SANITY_TOKEN')
+    const token = process.env.SANITY_TOKEN || process.env.SANITY_API_TOKEN
+    if (!token) {
+      console.error('Missing SANITY_TOKEN or SANITY_API_TOKEN')
       return NextResponse.json(
         { 
           error: 'Sanity token not configured',
-          details: 'The SANITY_TOKEN environment variable is missing in production. Please add it to your Vercel environment variables.'
+          details: 'The SANITY_TOKEN or SANITY_API_TOKEN environment variable is missing in production. Please add it to your Vercel environment variables.'
         },
         { status: 500 }
       )
@@ -82,8 +83,8 @@ export async function POST(request: NextRequest) {
     console.log('API Route: Environment variables check:')
     console.log('Project ID:', process.env.NEXT_PUBLIC_SANITY_PROJECT_ID)
     console.log('Dataset:', process.env.NEXT_PUBLIC_SANITY_DATASET)
-    console.log('Token exists:', !!process.env.SANITY_TOKEN)
-    console.log('Token length:', process.env.SANITY_TOKEN?.length)
+    console.log('Token exists:', !!token)
+    console.log('Token length:', token?.length)
 
     let sessionData;
     try {
