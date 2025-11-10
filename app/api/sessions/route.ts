@@ -22,9 +22,12 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   console.log('POST /api/sessions called');
+  const token = process.env.SANITY_TOKEN || process.env.SANITY_API_TOKEN
   console.log('Environment check at start:', {
     hasProjectId: !!process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
-    hasToken: !!process.env.SANITY_TOKEN,
+    hasToken: !!token,
+    hasSanityToken: !!process.env.SANITY_TOKEN,
+    hasSanityApiToken: !!process.env.SANITY_API_TOKEN,
     projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
     dataset: process.env.NEXT_PUBLIC_SANITY_DATASET,
   });
@@ -155,8 +158,17 @@ export async function POST(request: NextRequest) {
       stack: error instanceof Error ? error.stack : undefined,
       name: error instanceof Error ? error.name : undefined
     })
+    
+    // More detailed error response
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    const errorStack = error instanceof Error ? error.stack : undefined
+    
     return NextResponse.json(
-      { error: 'Failed to save session', details: error instanceof Error ? error.message : 'Unknown error' },
+      { 
+        error: 'Failed to save session', 
+        details: errorMessage,
+        ...(process.env.NODE_ENV === 'development' && { stack: errorStack })
+      },
       { status: 500 }
     )
   }
