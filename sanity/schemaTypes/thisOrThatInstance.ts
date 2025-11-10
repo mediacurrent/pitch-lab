@@ -31,7 +31,7 @@ export default defineType({
       name: 'timerLength',
       title: 'Timer Length (seconds)',
       type: 'number',
-      validation: (Rule) => Rule.required().min(5).max(30),
+      validation: (Rule) => Rule.required().min(5).max(60),
       initialValue: 10,
     }),
     defineField({
