@@ -150,20 +150,46 @@ export async function POST(request: NextRequest) {
     console.log('Attempting to create document in Sanity...')
     console.log('Document to create:', JSON.stringify(doc, null, 2))
     
-    // Test the connection first
+    // Test the connection first (optional - just for debugging)
     try {
       const testQuery = await client.fetch('*[_type == "votingSession"] | order(_createdAt desc)[0...1]');
       console.log('Sanity connection test successful, found', testQuery?.length || 0, 'existing sessions');
     } catch (testError) {
       console.error('Sanity connection test failed:', testError);
+      // Don't fail here - the token might not have read permissions but might have write permissions
+      // We'll try to create the document anyway
+      console.warn('Warning: Connection test failed, but proceeding with document creation. Error:', testError instanceof Error ? testError.message : 'Unknown error');
+    }
+    
+    // Attempt to create the document
+    let result;
+    try {
+      result = await client.create(doc)
+      console.log('Document created successfully:', result._id)
+    } catch (createError) {
+      console.error('Failed to create document in Sanity:', createError);
+      const errorMessage = createError instanceof Error ? createError.message : 'Unknown error';
+      const errorDetails = createError instanceof Error ? {
+        name: createError.name,
+        message: createError.message,
+        ...(createError.stack && { stack: createError.stack })
+      } : {};
+      
       return NextResponse.json(
-        { error: 'Sanity connection failed', details: testError instanceof Error ? testError.message : 'Unknown error' },
+        { 
+          error: 'Failed to create document in Sanity',
+          details: errorMessage,
+          ...(process.env.NODE_ENV === 'development' && errorDetails),
+          config: {
+            projectId: projectId?.substring(0, 8) + '...',
+            dataset,
+            hasToken: !!token,
+            tokenLength: token?.length || 0,
+          }
+        },
         { status: 500 }
       );
     }
-    
-    const result = await client.create(doc)
-    console.log('Document created successfully:', result._id)
 
     return NextResponse.json({ 
       success: true, 
