@@ -107,6 +107,8 @@ export async function POST(request: NextRequest) {
     console.log('Dataset:', dataset)
     console.log('Token exists:', !!token)
     console.log('Token length:', token?.length)
+    console.log('Token prefix:', token?.substring(0, 3) || 'none')
+    console.log('Token type check:', token?.startsWith('sk') ? 'Write token (sk)' : token?.startsWith('sanity') ? 'Legacy token' : 'Unknown format')
 
     let sessionData;
     try {
