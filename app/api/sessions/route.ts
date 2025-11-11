@@ -133,6 +133,19 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Validate votes array
+    if (!sessionData.votes || !Array.isArray(sessionData.votes) || sessionData.votes.length === 0) {
+      console.log('Invalid votes array:', { 
+        votes: sessionData.votes,
+        isArray: Array.isArray(sessionData.votes),
+        length: sessionData.votes?.length || 0
+      })
+      return NextResponse.json(
+        { error: 'Votes array is required and must contain at least one vote' },
+        { status: 400 }
+      )
+    }
+
     // Create the document in Sanity
     const doc = {
       _type: 'votingSession',
@@ -142,9 +155,13 @@ export async function POST(request: NextRequest) {
       sessionDate: new Date().toISOString(),
       votes: sessionData.votes.map((vote: any, index: number) => ({
         _key: `vote_${index}_${Date.now()}`,
-        ...vote
+        imagePairTitle: vote.imagePairTitle || '',
+        imageUrl1: vote.imageUrl1 || '',
+        imageUrl2: vote.imageUrl2 || '',
+        selectedImage: vote.selectedImage || 'timeout',
+        timeSpent: vote.timeSpent || 0,
       })),
-      summary: sessionData.summary,
+      summary: sessionData.summary || {},
     }
 
     console.log('Attempting to create document in Sanity...')
@@ -166,8 +183,12 @@ export async function POST(request: NextRequest) {
     try {
       result = await client.create(doc)
       console.log('Document created successfully:', result._id)
-    } catch (createError) {
+    } catch (createError: any) {
       console.error('Failed to create document in Sanity:', createError);
+      console.error('Error response:', createError?.responseBody || createError?.response || 'No response body');
+      
+      // Extract Sanity-specific error details
+      const sanityError = createError?.responseBody || createError?.response || {};
       const errorMessage = createError instanceof Error ? createError.message : 'Unknown error';
       const errorDetails = createError instanceof Error ? {
         name: createError.name,
@@ -175,17 +196,28 @@ export async function POST(request: NextRequest) {
         ...(createError.stack && { stack: createError.stack })
       } : {};
       
+      // Include Sanity error details if available
+      const sanityDetails = sanityError?.error ? {
+        sanityError: sanityError.error,
+        sanityMessage: sanityError.message,
+        sanityStatusCode: sanityError.statusCode,
+      } : {};
+      
       return NextResponse.json(
         { 
           error: 'Failed to create document in Sanity',
           details: errorMessage,
+          ...sanityDetails,
           ...(process.env.NODE_ENV === 'development' && errorDetails),
-          config: {
-            projectId: projectId?.substring(0, 8) + '...',
-            dataset,
-            hasToken: !!token,
-            tokenLength: token?.length || 0,
-          }
+          ...(process.env.NODE_ENV === 'development' && { 
+            docPreview: {
+              _type: doc._type,
+              userName: doc.userName,
+              instanceId: doc.instanceId,
+              votesCount: doc.votes?.length || 0,
+              hasSummary: !!doc.summary,
+            }
+          }),
         },
         { status: 500 }
       );
