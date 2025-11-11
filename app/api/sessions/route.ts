@@ -185,42 +185,68 @@ export async function POST(request: NextRequest) {
       console.log('Document created successfully:', result._id)
     } catch (createError: any) {
       console.error('Failed to create document in Sanity:', createError);
-      console.error('Error response:', createError?.responseBody || createError?.response || 'No response body');
+      console.error('Full error object:', JSON.stringify(createError, Object.getOwnPropertyNames(createError), 2));
+      console.error('Error responseBody:', createError?.responseBody);
+      console.error('Error response:', createError?.response);
+      console.error('Error statusCode:', createError?.statusCode);
+      console.error('Error statusMessage:', createError?.statusMessage);
       
-      // Extract Sanity-specific error details
+      // Extract Sanity-specific error details from various possible locations
       const sanityError = createError?.responseBody || createError?.response || {};
       const errorMessage = createError instanceof Error ? createError.message : 'Unknown error';
-      const errorDetails = createError instanceof Error ? {
-        name: createError.name,
-        message: createError.message,
-        ...(createError.stack && { stack: createError.stack })
-      } : {};
       
-      // Include Sanity error details if available
-      const sanityDetails = sanityError?.error ? {
-        sanityError: sanityError.error,
-        sanityMessage: sanityError.message,
-        sanityStatusCode: sanityError.statusCode,
-      } : {};
+      // Try to extract error message from different possible locations
+      let sanityErrorMessage = errorMessage;
+      if (sanityError?.error) {
+        sanityErrorMessage = sanityError.error;
+      } else if (sanityError?.message) {
+        sanityErrorMessage = sanityError.message;
+      } else if (createError?.message) {
+        sanityErrorMessage = createError.message;
+      }
       
-      return NextResponse.json(
-        { 
-          error: 'Failed to create document in Sanity',
-          details: errorMessage,
-          ...sanityDetails,
-          ...(process.env.NODE_ENV === 'development' && errorDetails),
-          ...(process.env.NODE_ENV === 'development' && { 
-            docPreview: {
-              _type: doc._type,
-              userName: doc.userName,
-              instanceId: doc.instanceId,
-              votesCount: doc.votes?.length || 0,
-              hasSummary: !!doc.summary,
-            }
-          }),
-        },
-        { status: 500 }
-      );
+      // Build comprehensive error response
+      const errorResponse: any = {
+        error: 'Failed to create document in Sanity',
+        details: sanityErrorMessage,
+      };
+      
+      // Add Sanity-specific details if available
+      if (sanityError?.error) {
+        errorResponse.sanityError = sanityError.error;
+      }
+      if (sanityError?.message) {
+        errorResponse.sanityMessage = sanityError.message;
+      }
+      if (createError?.statusCode) {
+        errorResponse.statusCode = createError.statusCode;
+      }
+      if (sanityError?.statusCode) {
+        errorResponse.sanityStatusCode = sanityError.statusCode;
+      }
+      
+      // Add development-only details
+      if (process.env.NODE_ENV === 'development') {
+        errorResponse.errorDetails = {
+          name: createError?.name,
+          message: createError?.message,
+          ...(createError?.stack && { stack: createError.stack })
+        };
+        errorResponse.docPreview = {
+          _type: doc._type,
+          userName: doc.userName,
+          instanceId: doc.instanceId,
+          votesCount: doc.votes?.length || 0,
+          hasSummary: !!doc.summary,
+          firstVote: doc.votes?.[0] ? {
+            hasImageUrl1: !!doc.votes[0].imageUrl1,
+            hasImageUrl2: !!doc.votes[0].imageUrl2,
+            selectedImage: doc.votes[0].selectedImage,
+          } : null,
+        };
+      }
+      
+      return NextResponse.json(errorResponse, { status: 500 });
     }
 
     return NextResponse.json({ 

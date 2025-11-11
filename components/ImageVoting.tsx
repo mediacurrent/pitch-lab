@@ -207,8 +207,21 @@ export function ImageVoting({
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
-        console.error('API Error:', errorData)
-        throw new Error(errorData.error || errorData.details || 'Failed to save session')
+        console.error('API Error Response:', JSON.stringify(errorData, null, 2))
+        
+        // Build a detailed error message
+        let errorMessage = errorData.error || 'Failed to save session'
+        if (errorData.details) {
+          errorMessage += `: ${errorData.details}`
+        }
+        if (errorData.sanityError) {
+          errorMessage += ` (Sanity: ${errorData.sanityError})`
+        }
+        if (errorData.sanityMessage) {
+          errorMessage += ` - ${errorData.sanityMessage}`
+        }
+        
+        throw new Error(errorMessage)
       }
 
       const result = await response.json()
