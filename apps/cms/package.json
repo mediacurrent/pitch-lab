@@ -1,0 +1,38 @@
+{
+  "name": "@repo/cms",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "next build",
+    "dev": "next dev --port 3001",
+    "lint": "next lint",
+    "start": "next start --port 3001",
+    "generate:types": "payload generate:types",
+    "generate:importmap": "payload generate:importmap",
+    "fix-user": "tsx scripts/fix-first-user.ts"
+  },
+  "dependencies": {
+    "@payloadcms/db-mongodb": "^3.0.0",
+    "@payloadcms/next": "^3.0.0",
+    "@payloadcms/richtext-lexical": "^3.0.0",
+    "graphql": "^16.8.1",
+    "next": "15.4.11",
+    "payload": "^3.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "sharp": "^0.33.0"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "15.4.11",
+    "typescript": "^5.7.0",
+    "dotenv": "^16.4.5",
+    "tsx": "^4.19.0"
+  }
+}
