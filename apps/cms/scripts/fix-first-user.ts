@@ -6,7 +6,7 @@
  */
 import 'dotenv/config'
 import { getPayload } from 'payload'
-import config from '../payload.config.ts'
+import config from '../payload.config'
 
 const USER_ID = '698632eceb4f75667f025b27' // replace if your user id is different
 

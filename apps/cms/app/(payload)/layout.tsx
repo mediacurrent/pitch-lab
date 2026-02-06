@@ -9,6 +9,9 @@ import React from 'react'
 import { importMap } from './admin/importMap.js'
 import './custom.scss'
 
+// Type assertion so the build doesn't need to reference @payloadcms/richtext-lexical internals
+const typedImportMap = importMap as Record<string, React.ComponentType<unknown>>
+
 type Args = {
   children: React.ReactNode
 }
@@ -18,12 +21,12 @@ const serverFunction: ServerFunctionClient = async function (args) {
   return handleServerFunctions({
     ...args,
     config,
-    importMap,
+    importMap: typedImportMap,
   })
 }
 
 const Layout = ({ children }: Args) => (
-  <RootLayout config={config} importMap={importMap} serverFunction={serverFunction}>
+  <RootLayout config={config} importMap={typedImportMap} serverFunction={serverFunction}>
     {children}
   </RootLayout>
 )
