@@ -14,7 +14,14 @@ import { Users } from './collections/Users'
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
+// Required for production: OG images, API redirects, and login use this. Set PAYLOAD_PUBLIC_SERVER_URL in Vercel, or we use VERCEL_URL.
+const serverURL =
+  process.env.PAYLOAD_PUBLIC_SERVER_URL ||
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined) ||
+  'http://localhost:3001'
+
 export default buildConfig({
+  serverURL,
   admin: {
     meta: {
       titleSuffix: ' | Site CMS',
@@ -28,6 +35,13 @@ export default buildConfig({
   },
   db: mongooseAdapter({
     url: process.env.DATABASE_URI || process.env.MONGODB_URI || 'mongodb://localhost:27017/payload-turbo',
+    connectOptions: {
+      serverSelectionTimeoutMS: 15000,
+      // Prefer TLS 1.2+ for Atlas (avoids TLS "internal error" from serverless runtimes)
+      ...(process.env.DATABASE_URI?.startsWith('mongodb+srv://') || process.env.MONGODB_URI?.startsWith('mongodb+srv://')
+        ? { tls: true }
+        : {}),
+    },
   }),
   sharp,
 })
