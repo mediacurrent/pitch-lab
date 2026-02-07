@@ -5,6 +5,8 @@ import { Button, Input, Label, cn } from '@repo/ui'
 
 interface Login3Props {
   heading?: string
+  error?: string | null
+  disabled?: boolean
   logo?: {
     url: string
     src: string
@@ -28,6 +30,8 @@ const defaultLogo = {
 
 const Login3 = ({
   heading = 'Login',
+  error,
+  disabled = false,
   logo = defaultLogo,
   buttonText = 'Login',
   signupText = 'Need an account?',
@@ -53,6 +57,11 @@ const Login3 = ({
               />
             </Link>
             {heading && <h1 className="text-2xl font-semibold">{heading}</h1>}
+            {error && (
+              <p className="w-full rounded-md bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
+                {error}
+              </p>
+            )}
             <div className="flex w-full flex-col gap-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -75,7 +84,7 @@ const Login3 = ({
                 required
               />
             </div>
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full" disabled={disabled}>
               {buttonText}
             </Button>
           </form>

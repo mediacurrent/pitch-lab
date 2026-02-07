@@ -14,6 +14,8 @@ export const Users: CollectionConfig = {
     defaultColumns: ['firstName', 'lastName', 'email', 'userType', 'company', 'assignedApplications'],
   },
   access: {
+    admin: ({ req }) =>
+      ['admin', 'manager'].includes((req.user as { userType?: string })?.userType ?? ''),
     create: ({ req }) => {
       return ['admin', 'manager'].includes((req.user as { userType?: string })?.userType ?? '')
     },
@@ -92,6 +94,7 @@ export const Users: CollectionConfig = {
         description: 'Image choice assessments (and other apps) this user can access. Only admins and managers can edit.',
       },
       access: {
+        create: ({ req }) => ['admin', 'manager'].includes((req.user as { userType?: string })?.userType ?? ''),
         update: ({ req }) => ['admin', 'manager'].includes((req.user as { userType?: string })?.userType ?? ''),
       },
     },

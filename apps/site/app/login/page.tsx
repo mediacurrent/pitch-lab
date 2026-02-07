@@ -1,15 +1,40 @@
 'use client'
 
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Login3 } from '@/components/login3'
 
 export default function LoginPage() {
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const router = useRouter()
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    setError(null)
+    setLoading(true)
     const formData = new FormData(e.currentTarget)
     const email = formData.get('email') as string
     const password = formData.get('password') as string
-    // TODO: Integrate with Payload /api/users/login or your auth provider
-    console.log({ email, password })
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setError(data.error || 'Login failed')
+        setLoading(false)
+        return
+      }
+      router.push('/dashboard')
+      router.refresh()
+    } catch {
+      setError('Login failed')
+      setLoading(false)
+    }
   }
 
   return (
@@ -21,7 +46,9 @@ export default function LoginPage() {
         alt: 'Logo',
         title: 'Home',
       }}
-      buttonText="Sign in"
+      buttonText={loading ? 'Signing in...' : 'Sign in'}
+      error={error}
+      disabled={loading}
       signupText="Need an account?"
       signupUrl="/signup"
       onSubmit={handleSubmit}

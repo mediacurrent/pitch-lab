@@ -2,6 +2,12 @@ import type { CollectionConfig } from 'payload'
 
 export const Companies: CollectionConfig = {
   slug: 'companies',
+  access: {
+    read: () => true,
+    create: ({ req }) => ['admin', 'manager'].includes((req.user as { userType?: string })?.userType ?? ''),
+    update: ({ req }) => ['admin', 'manager'].includes((req.user as { userType?: string })?.userType ?? ''),
+    delete: ({ req }) => (req.user as { userType?: string })?.userType === 'admin',
+  },
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'updatedAt'],
