@@ -7,8 +7,12 @@ import { LogoutButton } from '@/components/logout-button'
 const CMS_URL = process.env.CMS_URL || 'http://localhost:3001'
 const IMAGE_CHOICE_URL =
   process.env.NEXT_PUBLIC_IMAGE_CHOICE_URL || 'http://localhost:3002'
+const CONTENT_RANK_URL =
+  process.env.NEXT_PUBLIC_CONTENT_RANK_URL || 'http://localhost:3003'
 const DEFAULT_CARD_BACKGROUND =
   'https://deifkwefumgah.cloudfront.net/shadcnblocks/block/photos/simone-hutsch-5oYbG-sEImY-unsplash.jpg'
+const CONTENT_RANK_BACKGROUND =
+  'https://deifkwefumgah.cloudfront.net/shadcnblocks/block/photos/simone-hutsch-o9F8dRoSucM-unsplash.jpg'
 
 type AssignedAssessment = {
   id: string
@@ -16,7 +20,13 @@ type AssignedAssessment = {
   description?: string | null
 }
 
-function toCardData(assessment: AssignedAssessment): CardData {
+type ContentRankInstance = {
+  id: string
+  title?: string | null
+  accessToken?: string | null
+}
+
+function toImageChoiceCard(assessment: AssignedAssessment): CardData {
   const id = typeof assessment === 'string' ? assessment : assessment.id
   const title = typeof assessment === 'string' ? 'Assessment' : (assessment.title || 'Image choice')
   const description =
@@ -26,6 +36,19 @@ function toCardData(assessment: AssignedAssessment): CardData {
     link: `${IMAGE_CHOICE_URL}?assessment=${id}`,
     background: DEFAULT_CARD_BACKGROUND,
     stats: [{ number: 'A/B', text: description || 'Time-based selection between two images' }],
+  }
+}
+
+function toContentRankCard(instance: ContentRankInstance): CardData {
+  const id = typeof instance === 'string' ? instance : instance.id
+  const title = typeof instance === 'string' ? 'Content rank' : (instance.title || 'Content rank')
+  const token = typeof instance === 'object' && instance.accessToken ? instance.accessToken : ''
+  const link = token ? `${CONTENT_RANK_URL}?id=${id}&token=${encodeURIComponent(token)}` : `${CONTENT_RANK_URL}?id=${id}`
+  return {
+    title,
+    link,
+    background: CONTENT_RANK_BACKGROUND,
+    stats: [{ number: 'Rank', text: 'Rank pages from ScreamingFrog + GA4: move, lost, reuse' }],
   }
 }
 
@@ -47,9 +70,19 @@ export default async function DashboardPage() {
 
   const user = data.user as { assignedApplications?: (string | AssignedAssessment)[] | null }
   const assigned = user?.assignedApplications ?? []
-  const cards: CardData[] = assigned
+
+  const contentRankRes = await fetch(
+    `${CMS_URL}/api/content-rank?where[isActive][equals]=true&limit=100&depth=0&select[id]=true&select[title]=true&select[accessToken]=true`,
+    { headers: { Authorization: `JWT ${token}` }, next: { revalidate: 0 } },
+  )
+  const contentRankData = await contentRankRes.json().catch(() => ({ docs: [] }))
+  const contentRanks = (contentRankData.docs ?? []) as ContentRankInstance[]
+
+  const imageChoiceCards = assigned
     .filter((a): a is AssignedAssessment => !!a)
-    .map(toCardData)
+    .map(toImageChoiceCard)
+  const contentRankCards = contentRanks.map(toContentRankCard)
+  const cards: CardData[] = [...imageChoiceCards, ...contentRankCards]
 
   return (
     <div className="min-h-screen bg-slate-50">

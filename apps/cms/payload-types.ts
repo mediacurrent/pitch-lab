@@ -70,7 +70,9 @@ export interface Config {
     companies: Company;
     users: User;
     media: Media;
+    'csv-uploads': CsvUpload;
     'image-choice-assessments': ImageChoiceAssessment;
+    'content-rank': ContentRank;
     'questions-bank': QuestionsBank;
     'fill-in-the-blank': FillInTheBlank;
     'payload-kv': PayloadKv;
@@ -83,7 +85,9 @@ export interface Config {
     companies: CompaniesSelect<false> | CompaniesSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    'csv-uploads': CsvUploadsSelect<false> | CsvUploadsSelect<true>;
     'image-choice-assessments': ImageChoiceAssessmentsSelect<false> | ImageChoiceAssessmentsSelect<true>;
+    'content-rank': ContentRankSelect<false> | ContentRankSelect<true>;
     'questions-bank': QuestionsBankSelect<false> | QuestionsBankSelect<true>;
     'fill-in-the-blank': FillInTheBlankSelect<false> | FillInTheBlankSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -294,6 +298,57 @@ export interface Media {
   };
 }
 /**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "csv-uploads".
+ */
+export interface CsvUpload {
+  id: string;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "content-rank".
+ */
+export interface ContentRank {
+  id: string;
+  /**
+   * Name of this content rank instance
+   */
+  title: string;
+  /**
+   * ScreamingFrog crawl export (CSV)
+   */
+  screamingFrogCsv: string | CsvUpload;
+  /**
+   * GA4 report export (CSV)
+   */
+  ga4Csv: string | CsvUpload;
+  /**
+   * Company this content rank is assigned to
+   */
+  company: string | Company;
+  /**
+   * Whether this instance is active
+   */
+  isActive?: boolean | null;
+  /**
+   * Token for the Content Rank app to fetch this instance (without CMS login)
+   */
+  accessToken?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Reusable fill-in-the-blank prompts (questions bank). Use _____ or [blank] for the gap. Admins can select these when building a Fill in the Blank activity.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -378,8 +433,16 @@ export interface PayloadLockedDocument {
         value: string | Media;
       } | null)
     | ({
+        relationTo: 'csv-uploads';
+        value: string | CsvUpload;
+      } | null)
+    | ({
         relationTo: 'image-choice-assessments';
         value: string | ImageChoiceAssessment;
+      } | null)
+    | ({
+        relationTo: 'content-rank';
+        value: string | ContentRank;
       } | null)
     | ({
         relationTo: 'questions-bank';
@@ -513,6 +576,23 @@ export interface MediaSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "csv-uploads_select".
+ */
+export interface CsvUploadsSelect<T extends boolean = true> {
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "image-choice-assessments_select".
  */
 export interface ImageChoiceAssessmentsSelect<T extends boolean = true> {
@@ -530,6 +610,20 @@ export interface ImageChoiceAssessmentsSelect<T extends boolean = true> {
   duration?: T;
   isActive?: T;
   instructions?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "content-rank_select".
+ */
+export interface ContentRankSelect<T extends boolean = true> {
+  title?: T;
+  screamingFrogCsv?: T;
+  ga4Csv?: T;
+  company?: T;
+  isActive?: T;
+  accessToken?: T;
   updatedAt?: T;
   createdAt?: T;
 }

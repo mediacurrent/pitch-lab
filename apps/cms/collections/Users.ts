@@ -8,6 +8,7 @@ export const Users: CollectionConfig = {
     verify: false,
     maxLoginAttempts: 5,
     lockTime: 600 * 1000, // 10 minutes
+    depth: 1, // Include company in JWT so content-rank read access works for client-users
   },
   admin: {
     useAsTitle: 'email',
@@ -85,6 +86,13 @@ export const Users: CollectionConfig = {
         description: 'Image choice assessments (and other apps) this user can access. Only admins can edit.',
       },
       access: {
+        read: ({ req, doc }) => {
+          const user = req.user as { userType?: string; id?: string }
+          if (user?.userType === 'admin') return true
+          if (user?.id && doc && typeof doc === 'object' && 'id' in doc && (doc as { id: string }).id === user.id)
+            return true
+          return false
+        },
         create: ({ req }) => (req.user as { userType?: string })?.userType === 'admin',
         update: ({ req }) => (req.user as { userType?: string })?.userType === 'admin',
       },

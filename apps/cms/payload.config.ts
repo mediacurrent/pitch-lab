@@ -5,6 +5,8 @@ import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { mongooseAdapter } from '@payloadcms/db-mongodb'
 import { buildConfig } from 'payload'
 import { Companies } from './collections/Companies'
+import { ContentRank } from './collections/ContentRank'
+import { CsvUploads } from './collections/CsvUploads'
 import { FillInTheBlank } from './collections/FillInTheBlank'
 import { QuestionsBank } from './collections/QuestionsBank'
 import { ImageChoiceAssessments } from './collections/ImageChoiceAssessments'
@@ -22,12 +24,38 @@ const serverURL =
 
 export default buildConfig({
   serverURL,
+  endpoints: [
+    {
+      path: '/content-rank-by-token',
+      method: 'get',
+      handler: async (req) => {
+        const url = new URL(req.url || '', 'http://localhost')
+        const id = url.searchParams.get('id')
+        const token = url.searchParams.get('token')
+        if (!id || !token) {
+          return Response.json({ error: 'id and token required' }, { status: 400 })
+        }
+        const doc = await req.payload.findByID({
+          collection: 'content-rank',
+          id,
+          overrideAccess: true,
+        })
+        if (!doc || (doc as { accessToken?: string }).accessToken !== token) {
+          return Response.json({ error: 'Not found' }, { status: 404 })
+        }
+        if (!(doc as { isActive?: boolean }).isActive) {
+          return Response.json({ error: 'Not found' }, { status: 404 })
+        }
+        return Response.json(doc)
+      },
+    },
+  ],
   admin: {
     meta: {
       titleSuffix: ' | Site CMS',
     },
   },
-  collections: [Companies, Users, Media, ImageChoiceAssessments, QuestionsBank, FillInTheBlank],
+  collections: [Companies, Users, Media, CsvUploads, ImageChoiceAssessments, ContentRank, QuestionsBank, FillInTheBlank],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || 'change-me-in-production',
   typescript: {
