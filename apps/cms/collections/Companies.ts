@@ -4,8 +4,8 @@ export const Companies: CollectionConfig = {
   slug: 'companies',
   access: {
     read: () => true,
-    create: ({ req }) => ['admin', 'manager'].includes((req.user as { userType?: string })?.userType ?? ''),
-    update: ({ req }) => ['admin', 'manager'].includes((req.user as { userType?: string })?.userType ?? ''),
+    create: ({ req }) => (req.user as { userType?: string })?.userType === 'admin',
+    update: ({ req }) => (req.user as { userType?: string })?.userType === 'admin',
     delete: ({ req }) => (req.user as { userType?: string })?.userType === 'admin',
   },
   admin: {

@@ -9,9 +9,9 @@ export const ImageChoiceAssessments: CollectionConfig = {
     defaultColumns: ['title', 'duration', 'isActive', 'updatedAt'],
   },
   access: {
-    create: ({ req }) => ['admin', 'manager'].includes((req.user as UserLike)?.userType ?? ''),
+    create: ({ req }) => (req.user as UserLike)?.userType === 'admin',
     read: () => true,
-    update: ({ req }) => ['admin', 'manager'].includes((req.user as UserLike)?.userType ?? ''),
+    update: ({ req }) => (req.user as UserLike)?.userType === 'admin',
     delete: ({ req }) => (req.user as UserLike)?.userType === 'admin',
   },
   fields: [

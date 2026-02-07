@@ -152,13 +152,13 @@ export interface User {
   /**
    * User's role in the system
    */
-  userType: 'admin' | 'manager' | 'client-user';
+  userType: 'admin' | 'client-user';
   /**
    * The company this user belongs to
    */
   company: string | Company;
   /**
-   * Image choice assessments (and other apps) this user can access. Only admins and managers can edit.
+   * Image choice assessments (and other apps) this user can access. Only admins can edit.
    */
   assignedApplications?: (string | ImageChoiceAssessment)[] | null;
   /**

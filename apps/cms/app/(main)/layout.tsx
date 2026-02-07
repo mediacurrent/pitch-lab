@@ -1,6 +1,13 @@
 import type { Metadata } from 'next'
 
+const baseUrl = process.env.PAYLOAD_PUBLIC_SERVER_URL
+  ? process.env.PAYLOAD_PUBLIC_SERVER_URL
+  : process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : 'http://localhost:3001'
+
 export const metadata: Metadata = {
+  metadataBase: new URL(baseUrl),
   title: 'CMS Admin',
   description: 'Payload CMS Admin',
 }

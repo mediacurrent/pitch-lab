@@ -14,26 +14,18 @@ export const Users: CollectionConfig = {
     defaultColumns: ['firstName', 'lastName', 'email', 'userType', 'company', 'assignedApplications'],
   },
   access: {
-    admin: ({ req }) =>
-      ['admin', 'manager'].includes((req.user as { userType?: string })?.userType ?? ''),
-    create: ({ req }) => {
-      return ['admin', 'manager'].includes((req.user as { userType?: string })?.userType ?? '')
-    },
+    admin: ({ req }) => (req.user as { userType?: string })?.userType === 'admin',
+    create: ({ req }) => (req.user as { userType?: string })?.userType === 'admin',
     read: ({ req }): boolean | Where => {
-      const user = req.user as { userType?: string; company?: string | { id: string }; id?: string } | null
+      const user = req.user as { userType?: string; id?: string } | null
       if (user?.userType === 'admin') return true
-      if (user?.userType === 'manager') {
-        const companyId = typeof user.company === 'object' && user.company !== null ? (user.company as { id: string }).id : user.company
-        if (companyId) return { company: { equals: companyId } } as Where
-        return false
-      }
       if (user?.id) return { id: { equals: user.id } } as Where
       return false
     },
-    update: ({ req }) => {
+    update: ({ req }): boolean | Where => {
       const user = req.user as { userType?: string; id?: string } | null
       if (user?.userType === 'admin') return true
-      if (user?.id) return { id: { equals: user.id } }
+      if (user?.id) return { id: { equals: user.id } } as Where
       return false
     },
     delete: ({ req }) => (req.user as { userType?: string })?.userType === 'admin',
@@ -61,7 +53,6 @@ export const Users: CollectionConfig = {
       required: true,
       options: [
         { label: 'Admin', value: 'admin' },
-        { label: 'Manager', value: 'manager' },
         { label: 'Client User', value: 'client-user' },
       ],
       defaultValue: 'client-user',
@@ -82,7 +73,7 @@ export const Users: CollectionConfig = {
       },
       access: {
         update: ({ req }) => (req.user as { userType?: string })?.userType === 'admin',
-        create: ({ req }) => ['admin', 'manager'].includes((req.user as { userType?: string })?.userType ?? ''),
+        create: ({ req }) => (req.user as { userType?: string })?.userType === 'admin',
       },
     },
     {
@@ -91,11 +82,11 @@ export const Users: CollectionConfig = {
       relationTo: 'image-choice-assessments',
       hasMany: true,
       admin: {
-        description: 'Image choice assessments (and other apps) this user can access. Only admins and managers can edit.',
+        description: 'Image choice assessments (and other apps) this user can access. Only admins can edit.',
       },
       access: {
-        create: ({ req }) => ['admin', 'manager'].includes((req.user as { userType?: string })?.userType ?? ''),
-        update: ({ req }) => ['admin', 'manager'].includes((req.user as { userType?: string })?.userType ?? ''),
+        create: ({ req }) => (req.user as { userType?: string })?.userType === 'admin',
+        update: ({ req }) => (req.user as { userType?: string })?.userType === 'admin',
       },
     },
     {
