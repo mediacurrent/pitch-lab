@@ -14,7 +14,7 @@ import { Users } from './collections/Users'
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
-// Required for production: OG images, API redirects, and login use this. Set PAYLOAD_PUBLIC_SERVER_URL in Vercel, or we use VERCEL_URL.
+// Required for production: OG images, API, login. Set PAYLOAD_PUBLIC_SERVER_URL to your canonical URL (e.g. https://pitch-lab-cms.vercel.app) so OG requests are same-origin and not blocked by CORS.
 const serverURL =
   process.env.PAYLOAD_PUBLIC_SERVER_URL ||
   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined) ||
@@ -42,6 +42,8 @@ export default buildConfig({
         ? { tls: true }
         : {}),
     },
+    // Disable transactions to avoid "Write conflict during plan execution" on Atlas (M0/shared tier)
+    transactionOptions: false,
   }),
   sharp,
 })
