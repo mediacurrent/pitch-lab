@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { Button, Card, CardContent, CardHeader } from '@repo/ui'
+import { Button, Card, CardContent } from '@repo/ui'
 import {
   parseMigrationCSV,
   pathAfterEdu,
@@ -36,10 +36,54 @@ const REC_OPTIONS: MigrationRecommendation[] = [
   'STALE CONTENT',
 ]
 
+/** Combined filter option for Adapt + Flag for review. */
+const ADAPT_OR_FLAG = 'ADAPT_OR_FLAG' as const
+
+/** Combined filter option for Leave behind + Stale content (filter by year). */
+const LEAVE_BEHIND_OR_STALE = 'LEAVE_BEHIND_OR_STALE' as const
+
+/** Filter options shown in the UI. */
+const FILTER_OPTIONS = ['MIGRATE', ADAPT_OR_FLAG, LEAVE_BEHIND_OR_STALE] as const
+
+const FILTER_LABELS: Record<string, string> = {
+  MIGRATE: 'Migrate',
+  [ADAPT_OR_FLAG]: 'Flag for Review',
+  [LEAVE_BEHIND_OR_STALE]: 'Leave Behind',
+}
+
+const FILTER_COLORS: Record<string, string> = {
+  MIGRATE: 'bg-emerald-500',
+  [ADAPT_OR_FLAG]: 'bg-amber-500',
+  [LEAVE_BEHIND_OR_STALE]: 'bg-rose-500',
+}
+
+const FILTER_EXPLAINERS: Partial<Record<string, string>> = {
+  MIGRATE: 'Move these pages as is',
+  [ADAPT_OR_FLAG]: 'Check rationale and evaluate',
+  [LEAVE_BEHIND_OR_STALE]: 'Do not move · filter by year',
+}
+
+type RecFilter = 'all' | MigrationRecommendation | typeof ADAPT_OR_FLAG | typeof LEAVE_BEHIND_OR_STALE
+
+const GROUP_SEP = '\u001f'
+
+const QUERY_STRING_GROUP = 'Query string URLs'
+const TAG_GROUP = 'Tag URLs'
+const ACADEMIC_CALENDAR_LIST_GROUP = 'Academic calendar list'
+const CATEGORY_GROUP = 'Category URLs'
+
+/** Show-more categories (recommended Leave behind); filter by url_group. Excluded from Leave behind filter/counts. */
+const SHOW_MORE_CATEGORIES = [
+  { urlGroup: QUERY_STRING_GROUP, label: 'Query string' },
+  { urlGroup: TAG_GROUP, label: 'Tag' },
+  { urlGroup: ACADEMIC_CALENDAR_LIST_GROUP, label: 'Academic calendar list' },
+  { urlGroup: CATEGORY_GROUP, label: 'Category' },
+] as const
+
+const SPECIAL_LEAVE_BEHIND_URL_GROUPS = new Set(SHOW_MORE_CATEGORIES.map((c) => c.urlGroup))
+
 /** Stored decision: always a recommendation. Legacy stale-specific values are normalized when loaded. */
 type ClientDecision = MigrationRecommendation
-
-type RecFilter = 'all' | MigrationRecommendation
 
 interface ReviewGroup {
   recommendation: MigrationRecommendation
@@ -50,16 +94,34 @@ interface ReviewGroup {
   strategic_score: string
 }
 
-const GROUP_SEP = '\u001f'
-
 function groupRows(rows: MigrationRow[]): ReviewGroup[] {
-  const map = new Map<string, MigrationRow[]>()
+  const withQuery: MigrationRow[] = []
+  const withTag: MigrationRow[] = []
+  const withAcademicCalendar: MigrationRow[] = []
+  const withCategory: MigrationRow[] = []
+  const rest: MigrationRow[] = []
   for (const row of rows) {
+    if (row.URL.includes('?')) {
+      withQuery.push(row)
+    } else if (row.URL.includes('/tag/')) {
+      withTag.push(row)
+    } else if (row.URL.includes('/academic-calendar-list/')) {
+      withAcademicCalendar.push(row)
+    } else if (row.URL.includes('/category/')) {
+      withCategory.push(row)
+    } else {
+      rest.push(row)
+    }
+  }
+
+  const map = new Map<string, MigrationRow[]>()
+  for (const row of rest) {
     const key = [row.recommendation, row.reason, row.url_group].join(GROUP_SEP)
     if (!map.has(key)) map.set(key, [])
     map.get(key)!.push(row)
   }
-  return Array.from(map.entries())
+
+  const groups: ReviewGroup[] = Array.from(map.entries())
     .filter(([, pages]) => pages.length > 0)
     .map(([, pages]) => {
       const first = pages[0]!
@@ -72,7 +134,56 @@ function groupRows(rows: MigrationRow[]): ReviewGroup[] {
         strategic_score: first.strategic_score || first.strategic_value || '',
       }
     })
-    .sort((a, b) => b.count - a.count)
+
+  if (withQuery.length > 0) {
+    const first = withQuery[0]!
+    groups.push({
+      recommendation: 'LEAVE BEHIND',
+      reason: 'URL has query parameters',
+      url_group: QUERY_STRING_GROUP,
+      count: withQuery.length,
+      pages: withQuery,
+      strategic_score: first.strategic_score || first.strategic_value || '',
+    })
+  }
+
+  if (withTag.length > 0) {
+    const first = withTag[0]!
+    groups.push({
+      recommendation: 'LEAVE BEHIND',
+      reason: 'URL includes /tag/',
+      url_group: TAG_GROUP,
+      count: withTag.length,
+      pages: withTag,
+      strategic_score: first.strategic_score || first.strategic_value || '',
+    })
+  }
+
+  if (withAcademicCalendar.length > 0) {
+    const first = withAcademicCalendar[0]!
+    groups.push({
+      recommendation: 'LEAVE BEHIND',
+      reason: 'URL includes /academic-calendar-list/',
+      url_group: ACADEMIC_CALENDAR_LIST_GROUP,
+      count: withAcademicCalendar.length,
+      pages: withAcademicCalendar,
+      strategic_score: first.strategic_score || first.strategic_value || '',
+    })
+  }
+
+  if (withCategory.length > 0) {
+    const first = withCategory[0]!
+    groups.push({
+      recommendation: 'LEAVE BEHIND',
+      reason: 'URL includes /category/',
+      url_group: CATEGORY_GROUP,
+      count: withCategory.length,
+      pages: withCategory,
+      strategic_score: first.strategic_score || first.strategic_value || '',
+    })
+  }
+
+  return groups.sort((a, b) => b.count - a.count)
 }
 
 const STORAGE_KEY = 'nysid-review-decisions'
@@ -113,8 +224,11 @@ export default function GroupReviewPage() {
   const [notes, setNotes] = useState('')
   const [recFilter, setRecFilter] = useState<RecFilter>('MIGRATE')
   const [urlsExpanded, setUrlsExpanded] = useState(false)
-  /** When on STALE CONTENT, filter groups by single year (e.g. 2020). */
-  const [staleYearFilter, setStaleYearFilter] = useState<'all' | number>('all')
+  /** When on Leave behind & Stale, filter groups by single year (e.g. 2020). */
+  const [yearFilter, setYearFilter] = useState<'all' | number>('all')
+  const [showMoreExpanded, setShowMoreExpanded] = useState(false)
+  /** When set, filter to groups with this url_group (Query string, Tag, Academic calendar list — all recommended Leave behind). */
+  const [showMoreCategory, setShowMoreCategory] = useState<string | null>(null)
 
   const loadCSV = useCallback(async () => {
     setLoading(true)
@@ -144,33 +258,55 @@ export default function GroupReviewPage() {
 
   const groups = useMemo(() => groupRows(data), [data])
   const filteredGroups = useMemo(() => {
-    let list = recFilter === 'all' ? groups : groups.filter((g) => g.recommendation === recFilter)
-    if (recFilter === 'STALE CONTENT' && staleYearFilter !== 'all') {
-      const year = Number(staleYearFilter)
-      list = list.filter((g) => groupYears(g).includes(year))
+    if (showMoreCategory) {
+      return groups.filter((g) => g.url_group === showMoreCategory)
+    }
+    let list: ReviewGroup[]
+    if (recFilter === 'all') {
+      list = groups
+    } else if (recFilter === ADAPT_OR_FLAG) {
+      list = groups.filter((g) => g.recommendation === 'ADAPT' || g.recommendation === 'FLAG FOR REVIEW')
+    } else if (recFilter === LEAVE_BEHIND_OR_STALE) {
+      list = groups.filter(
+        (g) =>
+          (g.recommendation === 'LEAVE BEHIND' && !SPECIAL_LEAVE_BEHIND_URL_GROUPS.has(g.url_group)) ||
+          g.recommendation === 'STALE CONTENT'
+      )
+      if (yearFilter !== 'all') {
+        const year = Number(yearFilter)
+        list = list.filter((g) => groupYears(g).includes(year))
+      }
+    } else {
+      list = groups.filter((g) => g.recommendation === recFilter)
     }
     return list
-  }, [groups, recFilter, staleYearFilter])
+  }, [groups, recFilter, yearFilter, showMoreCategory])
 
-  const staleGroups = useMemo(
-    () => groups.filter((g) => g.recommendation === 'STALE CONTENT'),
+  /** Groups in the Leave behind & Stale category (for year options). */
+  const leaveBehindOrStaleGroups = useMemo(
+    () =>
+      groups.filter(
+        (g) =>
+          (g.recommendation === 'LEAVE BEHIND' && !SPECIAL_LEAVE_BEHIND_URL_GROUPS.has(g.url_group)) ||
+          g.recommendation === 'STALE CONTENT'
+      ),
     [groups]
   )
 
-  /** All years present in any stale group (for View by year single-year filter). */
-  const staleYearOptions = useMemo(() => {
+  /** All years present in Leave behind & Stale groups (for View by year). */
+  const yearOptions = useMemo(() => {
     const years = new Set<number>()
-    for (const g of staleGroups) {
+    for (const g of leaveBehindOrStaleGroups) {
       for (const y of groupYears(g)) {
         if (y > 1945) years.add(y)
       }
     }
     return Array.from(years).sort((a, b) => a - b)
-  }, [staleGroups])
+  }, [leaveBehindOrStaleGroups])
 
   useEffect(() => {
     setCurrentIndex(0)
-  }, [recFilter, staleYearFilter])
+  }, [recFilter, yearFilter, showMoreCategory])
 
   const currentGroup = filteredGroups[currentIndex] ?? null
 
@@ -180,7 +316,7 @@ export default function GroupReviewPage() {
   const saved = currentGroup ? decisions[groupKey(currentGroup)] : undefined
 
   const recCounts = useMemo(() => {
-    const c: Record<RecFilter, number> = {
+    const c: Record<string, number> = {
       all: groups.length,
       MIGRATE: 0,
       ADAPT: 0,
@@ -195,9 +331,30 @@ export default function GroupReviewPage() {
     return c
   }, [groups])
 
+  /** Counts for the 3 filter buttons (Leave behind & Stale combined; special URL groups excluded from leave-behind). */
+  const filterCounts = useMemo(() => {
+    const leaveBehind = groups.filter(
+      (g) => g.recommendation === 'LEAVE BEHIND' && !SPECIAL_LEAVE_BEHIND_URL_GROUPS.has(g.url_group)
+    ).length
+    const stale = recCounts['STALE CONTENT'] ?? 0
+    return {
+      MIGRATE: recCounts['MIGRATE'] ?? 0,
+      [ADAPT_OR_FLAG]: (recCounts['ADAPT'] ?? 0) + (recCounts['FLAG FOR REVIEW'] ?? 0),
+      [LEAVE_BEHIND_OR_STALE]: leaveBehind + stale,
+    }
+  }, [groups, recCounts])
+
+  const showMoreCounts = useMemo(() => {
+    const c: Record<string, number> = {}
+    for (const { urlGroup } of SHOW_MORE_CATEGORIES) {
+      c[urlGroup] = groups.filter((g) => g.url_group === urlGroup).length
+    }
+    return c
+  }, [groups])
+
   /** Number of groups with a saved decision per category. */
   const decidedCounts = useMemo(() => {
-    const c: Record<MigrationRecommendation, number> = {
+    const c: Record<string, number> = {
       MIGRATE: 0,
       ADAPT: 0,
       'FLAG FOR REVIEW': 0,
@@ -212,6 +369,22 @@ export default function GroupReviewPage() {
     }
     return c
   }, [groups, decisions])
+
+  /** Decided counts for the 3 filter buttons (Leave behind & Stale combined). */
+  const filterDecidedCounts = useMemo(() => {
+    const leaveBehind = groups.filter(
+      (g) =>
+        g.recommendation === 'LEAVE BEHIND' &&
+        !SPECIAL_LEAVE_BEHIND_URL_GROUPS.has(g.url_group) &&
+        groupKey(g) in decisions
+    ).length
+    const stale = decidedCounts['STALE CONTENT'] ?? 0
+    return {
+      MIGRATE: decidedCounts['MIGRATE'] ?? 0,
+      [ADAPT_OR_FLAG]: (decidedCounts['ADAPT'] ?? 0) + (decidedCounts['FLAG FOR REVIEW'] ?? 0),
+      [LEAVE_BEHIND_OR_STALE]: leaveBehind + stale,
+    }
+  }, [groups, decisions, decidedCounts])
 
   useEffect(() => {
     if (saved) {
@@ -286,14 +459,14 @@ export default function GroupReviewPage() {
             No groups for this recommendation. Choose another filter below.
           </p>
           <div className="flex flex-wrap gap-2">
-            {REC_OPTIONS.map((rec) => (
+            {FILTER_OPTIONS.map((rec) => (
               <Button
                 key={rec}
-                variant={recFilter === rec ? 'default' : 'outline'}
+                variant={!showMoreCategory && recFilter === rec ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => setRecFilter(rec)}
+                onClick={() => { setShowMoreCategory(null); setRecFilter(rec) }}
               >
-                {REC_LABELS[rec]} ({recCounts[rec]})
+                {FILTER_LABELS[rec]} ({filterCounts[rec] ?? 0})
               </Button>
             ))}
           </div>
@@ -311,16 +484,16 @@ export default function GroupReviewPage() {
     return null
   }
 
-  /** When View by year is set (Stale content), only pages whose URL contains that year. */
+  /** When View by year is set (Leave behind & Stale), only pages whose URL contains that year. */
   const pagesInYear =
-    recFilter === 'STALE CONTENT' && staleYearFilter !== 'all'
+    recFilter === LEAVE_BEHIND_OR_STALE && yearFilter !== 'all'
       ? currentGroup.pages.filter((row) =>
-          extractYearsFromUrl(row.URL).includes(Number(staleYearFilter))
+          extractYearsFromUrl(row.URL).includes(Number(yearFilter))
         )
       : currentGroup.pages
 
   const displayedUrls = urlsExpanded ? pagesInYear : pagesInYear.slice(0, 5)
-  const isYearFilterActive = recFilter === 'STALE CONTENT' && staleYearFilter !== 'all'
+  const isYearFilterActive = recFilter === LEAVE_BEHIND_OR_STALE && yearFilter !== 'all'
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -335,61 +508,95 @@ export default function GroupReviewPage() {
           <h1 className="text-2xl font-bold text-slate-900">Group review</h1>
           <p className="text-slate-600 mt-2">
             Group {currentIndex + 1} of {filteredGroups.length}
-            {recFilter !== 'all' ? ` (${REC_LABELS[recFilter]} only)` : ''} · {Object.keys(decisions).length} saved
+            {showMoreCategory
+              ? ` (${SHOW_MORE_CATEGORIES.find((c) => c.urlGroup === showMoreCategory)?.label ?? showMoreCategory})`
+              : recFilter !== 'all'
+                ? ` (${(FILTER_LABELS[recFilter] ?? REC_LABELS[recFilter])} only)`
+                : ''}{' '}
+            · {Object.keys(decisions).length} saved
           </p>
         </header>
 
         <>
             <div className="mb-4">
               <p className="text-xs font-medium text-slate-500 mb-2">Review by recommendation</p>
-              <div className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3 md:grid-cols-5">
-                {REC_OPTIONS.map((rec) => {
-                  const total = recCounts[rec]
-                  const done = decidedCounts[rec]
+              <div className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
+                {FILTER_OPTIONS.map((rec) => {
+                  const total = filterCounts[rec] ?? 0
+                  const done = filterDecidedCounts[rec] ?? 0
                   const pct = total > 0 ? Math.round((done / total) * 100) : 0
                   return (
                     <div key={rec} className="min-w-0 flex flex-col gap-1.5">
                       <Button
-                        variant={recFilter === rec ? 'default' : 'outline'}
+                        variant={!showMoreCategory && recFilter === rec ? 'default' : 'outline'}
                         size="sm"
-                        onClick={() => setRecFilter(rec)}
+                        onClick={() => {
+                          setShowMoreCategory(null)
+                          setRecFilter(rec)
+                        }}
                         className="w-full justify-center"
                       >
-                        {REC_LABELS[rec]}
+                        {FILTER_LABELS[rec]}
                       </Button>
                       <div className="flex justify-between text-xs text-slate-600">
-                        <span className="font-medium truncate">{REC_LABELS[rec]}</span>
+                        <span className="font-medium truncate">{FILTER_LABELS[rec]}</span>
                         <span className="tabular-nums shrink-0">{done}/{total}</span>
                       </div>
                       <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
                         <div
-                          className={`h-full rounded-full transition-[width] duration-200 ${
-                            rec === 'MIGRATE' ? 'bg-emerald-500' :
-                            rec === 'ADAPT' ? 'bg-amber-500' :
-                            rec === 'FLAG FOR REVIEW' ? 'bg-blue-500' :
-                            rec === 'LEAVE BEHIND' ? 'bg-rose-500' :
-                            'bg-zinc-500'
-                          }`}
+                          className={`h-full rounded-full transition-[width] duration-200 ${FILTER_COLORS[rec]}`}
                           style={{ width: `${pct}%` }}
                         />
                       </div>
+                      {FILTER_EXPLAINERS[rec] && (
+                        <p className="text-xs text-slate-500 leading-tight">
+                          {FILTER_EXPLAINERS[rec]}
+                        </p>
+                      )}
                     </div>
                   )
                 })}
               </div>
-              {recFilter === 'STALE CONTENT' && staleGroups.length > 0 && (
+              <div className="mt-3">
+                <button
+                  type="button"
+                  onClick={() => setShowMoreExpanded((e) => !e)}
+                  className="text-sm text-slate-600 hover:text-slate-900 underline"
+                >
+                  {showMoreExpanded ? 'Hide' : 'Show'} weird URL categories
+                </button>
+                {showMoreExpanded && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {SHOW_MORE_CATEGORIES.map(({ urlGroup, label }) => {
+                      const count = showMoreCounts[urlGroup] ?? 0
+                      if (count === 0) return null
+                      return (
+                        <Button
+                          key={urlGroup}
+                          variant={showMoreCategory === urlGroup ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setShowMoreCategory(showMoreCategory === urlGroup ? null : urlGroup)}
+                        >
+                          {label}
+                        </Button>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+              {recFilter === LEAVE_BEHIND_OR_STALE && yearOptions.length > 0 && !showMoreCategory && (
                 <div className="mt-3 flex items-center gap-2">
                   <span className="text-sm text-slate-600">View by year</span>
                   <select
-                    value={staleYearFilter === 'all' ? 'all' : String(staleYearFilter)}
+                    value={yearFilter === 'all' ? 'all' : String(yearFilter)}
                     onChange={(e) => {
                       const v = e.target.value
-                      setStaleYearFilter(v === 'all' ? 'all' : parseInt(v, 10))
+                      setYearFilter(v === 'all' ? 'all' : parseInt(v, 10))
                     }}
                     className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-800"
                   >
                     <option value="all">All years</option>
-                    {staleYearOptions.map((y) => (
+                    {yearOptions.map((y) => (
                       <option key={y} value={String(y)}>
                         {y}
                       </option>
@@ -400,16 +607,11 @@ export default function GroupReviewPage() {
             </div>
 
             <Card>
-          <CardHeader className="pb-2">
-            <span className="inline-block w-fit rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-sm font-medium text-slate-700">
-              {currentGroup.url_group}
-            </span>
-          </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 pt-6">
             <p>
               <strong>
                 {isYearFilterActive
-                  ? `${pagesInYear.length} of ${currentGroup.count} pages (${staleYearFilter} only)`
+                  ? `${pagesInYear.length} of ${currentGroup.count} pages (${yearFilter} only)`
                   : `${currentGroup.count} pages`}
               </strong>{' '}
               recommended to{' '}
@@ -422,12 +624,6 @@ export default function GroupReviewPage() {
             <p className="text-sm text-slate-600">
               Rationale: <em>{currentGroup.reason}</em>
             </p>
-            {currentGroup.strategic_score && (
-              <p className="text-sm text-slate-600">
-                Strategic score: <strong>{currentGroup.strategic_score}</strong>
-              </p>
-            )}
-
             <div>
               <div className="max-h-60 overflow-y-auto rounded border border-slate-200">
                 <table className="w-full text-sm">

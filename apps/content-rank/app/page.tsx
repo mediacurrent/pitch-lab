@@ -265,8 +265,8 @@ function MigrationPageInner() {
             >
               All ({data.length})
             </Button>
-            {(Object.keys(recCounts) as MigrationRecommendation[]).map(
-              (rec) => (
+            {(Object.keys(recCounts) as MigrationRecommendation[])
+              .map((rec) => (
                 <Button
                   key={rec}
                   variant={recFilter === rec ? 'default' : 'outline'}
@@ -275,8 +275,7 @@ function MigrationPageInner() {
                 >
                   {REC_LABELS[rec]} ({recCounts[rec]})
                 </Button>
-              )
-            )}
+              ))}
           </div>
           <select
             value={urlGroupFilter}
