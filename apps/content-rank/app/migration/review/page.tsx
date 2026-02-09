@@ -1,40 +1,18 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import Link from 'next/link'
 import { Button, Card, CardContent } from '@repo/ui'
+import { parseMigrationCSV, pathAfterEdu, formatEngagement, extractYearsFromUrl } from '@/lib/parseMigrationCSV'
+import type { MigrationRow, MigrationRecommendation } from '@/lib/parseMigrationCSV'
+import { REC_COLORS, REC_LABELS, REC_OPTIONS } from '@/lib/migrationConstants'
 import {
-  parseMigrationCSV,
-  pathAfterEdu,
-  formatEngagement,
-  extractYearsFromUrl,
-  type MigrationRow,
-  type MigrationRecommendation,
-} from '../../../lib/parseMigrationCSV'
-
-const REC_COLORS: Record<MigrationRecommendation, string> = {
-  MIGRATE: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-  ADAPT: 'bg-amber-100 text-amber-800 border-amber-200',
-  'LEAVE BEHIND': 'bg-rose-100 text-rose-800 border-rose-200',
-  'FLAG FOR REVIEW': 'bg-blue-100 text-blue-800 border-blue-200',
-  'STALE CONTENT': 'bg-zinc-100 text-zinc-800 border-zinc-300',
-}
-
-const REC_LABELS: Record<MigrationRecommendation, string> = {
-  MIGRATE: 'Migrate',
-  ADAPT: 'Adapt',
-  'LEAVE BEHIND': 'Leave behind',
-  'FLAG FOR REVIEW': 'Flag for review',
-  'STALE CONTENT': 'Stale content',
-}
-
-const REC_OPTIONS: MigrationRecommendation[] = [
-  'MIGRATE',
-  'ADAPT',
-  'FLAG FOR REVIEW',
-  'LEAVE BEHIND',
-  'STALE CONTENT',
-]
+  groupRows,
+  groupKey,
+  groupYears,
+  SHOW_MORE_CATEGORIES,
+  SPECIAL_LEAVE_BEHIND_URL_GROUPS,
+  type ReviewGroup,
+} from '@/lib/groupMigrationRows'
 
 /** Combined filter option for Adapt + Flag for review. */
 const ADAPT_OR_FLAG = 'ADAPT_OR_FLAG' as const
@@ -42,7 +20,6 @@ const ADAPT_OR_FLAG = 'ADAPT_OR_FLAG' as const
 /** Combined filter option for Leave behind + Stale content (filter by year). */
 const LEAVE_BEHIND_OR_STALE = 'LEAVE_BEHIND_OR_STALE' as const
 
-/** Filter options shown in the UI. */
 const FILTER_OPTIONS = ['MIGRATE', ADAPT_OR_FLAG, LEAVE_BEHIND_OR_STALE] as const
 
 const FILTER_LABELS: Record<string, string> = {
@@ -65,126 +42,8 @@ const FILTER_EXPLAINERS: Partial<Record<string, string>> = {
 
 type RecFilter = 'all' | MigrationRecommendation | typeof ADAPT_OR_FLAG | typeof LEAVE_BEHIND_OR_STALE
 
-const GROUP_SEP = '\u001f'
-
-const QUERY_STRING_GROUP = 'Query string URLs'
-const TAG_GROUP = 'Tag URLs'
-const ACADEMIC_CALENDAR_LIST_GROUP = 'Academic calendar list'
-const CATEGORY_GROUP = 'Category URLs'
-
-/** Show-more categories (recommended Leave behind); filter by url_group. Excluded from Leave behind filter/counts. */
-const SHOW_MORE_CATEGORIES = [
-  { urlGroup: QUERY_STRING_GROUP, label: 'Query string' },
-  { urlGroup: TAG_GROUP, label: 'Tag' },
-  { urlGroup: ACADEMIC_CALENDAR_LIST_GROUP, label: 'Academic calendar list' },
-  { urlGroup: CATEGORY_GROUP, label: 'Category' },
-] as const
-
-const SPECIAL_LEAVE_BEHIND_URL_GROUPS = new Set(SHOW_MORE_CATEGORIES.map((c) => c.urlGroup))
-
-/** Stored decision: always a recommendation. Legacy stale-specific values are normalized when loaded. */
+/** Stored decision: always a recommendation. */
 type ClientDecision = MigrationRecommendation
-
-interface ReviewGroup {
-  recommendation: MigrationRecommendation
-  reason: string
-  url_group: string
-  count: number
-  pages: MigrationRow[]
-  strategic_score: string
-}
-
-function groupRows(rows: MigrationRow[]): ReviewGroup[] {
-  const withQuery: MigrationRow[] = []
-  const withTag: MigrationRow[] = []
-  const withAcademicCalendar: MigrationRow[] = []
-  const withCategory: MigrationRow[] = []
-  const rest: MigrationRow[] = []
-  for (const row of rows) {
-    if (row.URL.includes('?')) {
-      withQuery.push(row)
-    } else if (row.URL.includes('/tag/')) {
-      withTag.push(row)
-    } else if (row.URL.includes('/academic-calendar-list/')) {
-      withAcademicCalendar.push(row)
-    } else if (row.URL.includes('/category/')) {
-      withCategory.push(row)
-    } else {
-      rest.push(row)
-    }
-  }
-
-  const map = new Map<string, MigrationRow[]>()
-  for (const row of rest) {
-    const key = [row.recommendation, row.reason, row.url_group].join(GROUP_SEP)
-    if (!map.has(key)) map.set(key, [])
-    map.get(key)!.push(row)
-  }
-
-  const groups: ReviewGroup[] = Array.from(map.entries())
-    .filter(([, pages]) => pages.length > 0)
-    .map(([, pages]) => {
-      const first = pages[0]!
-      return {
-        recommendation: first.recommendation,
-        reason: first.reason,
-        url_group: first.url_group,
-        count: pages.length,
-        pages,
-        strategic_score: first.strategic_score || first.strategic_value || '',
-      }
-    })
-
-  if (withQuery.length > 0) {
-    const first = withQuery[0]!
-    groups.push({
-      recommendation: 'LEAVE BEHIND',
-      reason: 'URL has query parameters',
-      url_group: QUERY_STRING_GROUP,
-      count: withQuery.length,
-      pages: withQuery,
-      strategic_score: first.strategic_score || first.strategic_value || '',
-    })
-  }
-
-  if (withTag.length > 0) {
-    const first = withTag[0]!
-    groups.push({
-      recommendation: 'LEAVE BEHIND',
-      reason: 'URL includes /tag/',
-      url_group: TAG_GROUP,
-      count: withTag.length,
-      pages: withTag,
-      strategic_score: first.strategic_score || first.strategic_value || '',
-    })
-  }
-
-  if (withAcademicCalendar.length > 0) {
-    const first = withAcademicCalendar[0]!
-    groups.push({
-      recommendation: 'LEAVE BEHIND',
-      reason: 'URL includes /academic-calendar-list/',
-      url_group: ACADEMIC_CALENDAR_LIST_GROUP,
-      count: withAcademicCalendar.length,
-      pages: withAcademicCalendar,
-      strategic_score: first.strategic_score || first.strategic_value || '',
-    })
-  }
-
-  if (withCategory.length > 0) {
-    const first = withCategory[0]!
-    groups.push({
-      recommendation: 'LEAVE BEHIND',
-      reason: 'URL includes /category/',
-      url_group: CATEGORY_GROUP,
-      count: withCategory.length,
-      pages: withCategory,
-      strategic_score: first.strategic_score || first.strategic_value || '',
-    })
-  }
-
-  return groups.sort((a, b) => b.count - a.count)
-}
 
 const STORAGE_KEY = 'nysid-review-decisions'
 const VERSION_STORAGE_KEY = 'migration-data-version'
@@ -199,23 +58,12 @@ function loadDecisions(): Record<string, { client_decision: ClientDecision; note
   }
 }
 
-function groupKey(g: ReviewGroup): string {
-  return [g.recommendation, g.reason, g.url_group].join(GROUP_SEP)
-}
-
-/** All years found in any URL in the group. */
-function groupYears(g: ReviewGroup): number[] {
-  const set = new Set<number>()
-  for (const row of g.pages) {
-    for (const y of extractYearsFromUrl(row.URL)) set.add(y)
-  }
-  return Array.from(set).sort((a, b) => a - b)
-}
-
 export default function GroupReviewPage() {
   const [data, setData] = useState<MigrationRow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [versions, setVersions] = useState<string[]>([])
+  const [selectedVersion, setSelectedVersion] = useState<string>('')
   const [currentIndex, setCurrentIndex] = useState(0)
   const [decisions, setDecisions] = useState<
     Record<string, { client_decision: ClientDecision; notes: string }>
@@ -224,22 +72,37 @@ export default function GroupReviewPage() {
   const [notes, setNotes] = useState('')
   const [recFilter, setRecFilter] = useState<RecFilter>('MIGRATE')
   const [urlsExpanded, setUrlsExpanded] = useState(false)
-  /** When on Leave behind & Stale, filter groups by single year (e.g. 2020). */
   const [yearFilter, setYearFilter] = useState<'all' | number>('all')
   const [showMoreExpanded, setShowMoreExpanded] = useState(false)
-  /** When set, filter to groups with this url_group (Query string, Tag, Academic calendar list — all recommended Leave behind). */
   const [showMoreCategory, setShowMoreCategory] = useState<string | null>(null)
 
+  useEffect(() => {
+    fetch('/api/migration-data?list=1')
+      .then((r) => r.json())
+      .then((body: { versions?: string[] }) => {
+        const list = body.versions ?? []
+        setVersions(list)
+        if (list.length > 0) {
+          const stored = typeof window !== 'undefined' ? localStorage.getItem(VERSION_STORAGE_KEY) : null
+          const version = (stored && list.includes(stored) ? stored : list[0]) ?? ''
+          setSelectedVersion(version)
+          if (typeof window !== 'undefined' && version) localStorage.setItem(VERSION_STORAGE_KEY, version)
+        } else {
+          setLoading(false)
+        }
+      })
+      .catch(() => {
+        setVersions([])
+        setLoading(false)
+      })
+  }, [])
+
   const loadCSV = useCallback(async () => {
+    if (!selectedVersion) return
     setLoading(true)
     setError(null)
     try {
-      const version =
-        typeof window !== 'undefined' ? localStorage.getItem(VERSION_STORAGE_KEY) : null
-      const url = version
-        ? `/api/migration-data?version=${encodeURIComponent(version)}`
-        : '/api/migration-data'
-      const res = await fetch(url)
+      const res = await fetch(`/api/migration-data?version=${encodeURIComponent(selectedVersion)}`)
       if (!res.ok) throw new Error('Failed to load')
       const csv = await res.text()
       setData(parseMigrationCSV(csv))
@@ -249,12 +112,24 @@ export default function GroupReviewPage() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [selectedVersion])
 
   useEffect(() => {
-    loadCSV()
+    if (selectedVersion) {
+      loadCSV()
+    } else if (versions.length === 0) {
+      setLoading(false)
+    }
+  }, [selectedVersion, loadCSV, versions.length])
+
+  useEffect(() => {
     setDecisions(loadDecisions())
-  }, [loadCSV])
+  }, [])
+
+  const handleVersionChange = (version: string) => {
+    setSelectedVersion(version)
+    if (typeof window !== 'undefined') localStorage.setItem(VERSION_STORAGE_KEY, version)
+  }
 
   const groups = useMemo(() => groupRows(data), [data])
   const filteredGroups = useMemo(() => {
@@ -428,19 +303,39 @@ export default function GroupReviewPage() {
     )
   }
 
-  if (error || groups.length === 0) {
+  if (error || (groups.length === 0 && selectedVersion)) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <Card className="max-w-md">
           <CardContent className="pt-6">
             <p className="text-slate-600">{error || 'No groups to review.'}</p>
-            <Link href="/migration">
-              <Button variant="outline" size="sm" className="mt-4">
-                Back to Migration
+            {versions.length > 0 && (
+              <Button variant="outline" size="sm" className="mt-4" onClick={() => loadCSV()}>
+                Retry
               </Button>
-            </Link>
+            )}
           </CardContent>
         </Card>
+      </div>
+    )
+  }
+
+  if (versions.length === 0 && !loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <Card className="max-w-md">
+          <CardContent className="pt-6">
+            <p className="text-slate-600">No migration data versions found.</p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  if (!selectedVersion && versions.length > 0) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <p className="text-slate-500">Loading…</p>
       </div>
     )
   }
@@ -450,10 +345,21 @@ export default function GroupReviewPage() {
       <div className="min-h-screen bg-slate-50">
         <div className="mx-auto max-w-5xl px-4 py-8">
           <header className="mb-6">
-            <Link href="/migration" className="text-sm text-slate-500 hover:text-slate-700 mb-2 inline-block">
-              ← Migration Analyzer
-            </Link>
-            <h1 className="text-2xl font-bold text-slate-900">Group review</h1>
+            <h1 className="text-2xl font-bold text-slate-900">Content Migration Analyzer (NYSID)</h1>
+            {versions.length > 0 && (
+              <label className="mt-2 flex items-center gap-2 text-sm text-slate-600">
+                <span>Data version:</span>
+                <select
+                  value={selectedVersion}
+                  onChange={(e) => handleVersionChange(e.target.value)}
+                  className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-slate-800"
+                >
+                  {versions.map((v) => (
+                    <option key={v} value={v}>{v}</option>
+                  ))}
+                </select>
+              </label>
+            )}
           </header>
           <p className="text-slate-600 mb-4">
             No groups for this recommendation. Choose another filter below.
@@ -470,11 +376,6 @@ export default function GroupReviewPage() {
               </Button>
             ))}
           </div>
-          <Link href="/migration">
-            <Button variant="outline" size="sm" className="mt-6">
-              Back to Migration
-            </Button>
-          </Link>
         </div>
       </div>
     )
@@ -499,22 +400,34 @@ export default function GroupReviewPage() {
     <div className="min-h-screen bg-slate-50">
       <div className="mx-auto max-w-5xl px-4 py-8">
         <header className="mb-6">
-          <Link
-            href="/migration"
-            className="text-sm text-slate-500 hover:text-slate-700 mb-2 inline-block"
-          >
-            ← Migration Analyzer
-          </Link>
-          <h1 className="text-2xl font-bold text-slate-900">Group review</h1>
-          <p className="text-slate-600 mt-2">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">Content Migration Analyzer (NYSID)</h1>
+              <p className="text-slate-600 mt-2">
             Group {currentIndex + 1} of {filteredGroups.length}
             {showMoreCategory
               ? ` (${SHOW_MORE_CATEGORIES.find((c) => c.urlGroup === showMoreCategory)?.label ?? showMoreCategory})`
               : recFilter !== 'all'
-                ? ` (${(FILTER_LABELS[recFilter] ?? REC_LABELS[recFilter])} only)`
+                ? ` (${FILTER_LABELS[recFilter] ?? recFilter} only)`
                 : ''}{' '}
             · {Object.keys(decisions).length} saved
-          </p>
+              </p>
+            </div>
+            {versions.length > 0 && (
+              <label className="flex items-center gap-2 text-sm text-slate-600">
+                <span>Data version:</span>
+                <select
+                  value={selectedVersion}
+                  onChange={(e) => handleVersionChange(e.target.value)}
+                  className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-slate-800"
+                >
+                  {versions.map((v) => (
+                    <option key={v} value={v}>{v}</option>
+                  ))}
+                </select>
+              </label>
+            )}
+          </div>
         </header>
 
         <>
