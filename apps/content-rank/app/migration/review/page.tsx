@@ -216,7 +216,8 @@ export default function GroupReviewPage() {
   useEffect(() => {
     if (saved) {
       const raw = saved.client_decision as string
-      setClientDecision(REC_OPTIONS.includes(raw as MigrationRecommendation) ? raw as MigrationRecommendation : currentGroup.recommendation)
+      const fallback = currentGroup?.recommendation ?? 'FLAG FOR REVIEW'
+      setClientDecision(REC_OPTIONS.includes(raw as MigrationRecommendation) ? raw as MigrationRecommendation : fallback)
       setNotes(saved.notes)
     } else if (currentGroup) {
       setClientDecision(null)
