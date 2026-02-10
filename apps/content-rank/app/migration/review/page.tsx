@@ -407,6 +407,31 @@ function GroupReviewPageContent() {
     }
   }, [groups, decisions, decidedCounts])
 
+  /** True when every group has a saved decision. */
+  const allGroupsReviewed = useMemo(
+    () => groups.length > 0 && groups.every((g) => groupKey(g) in decisions),
+    [groups, decisions]
+  )
+
+  /** Summary of decisions: how many groups the user decided as Migrate, Flagged for Review, etc. */
+  const summaryByDecision = useMemo(() => {
+    const c: Record<string, number> = {
+      MIGRATE: 0,
+      ADAPT: 0,
+      'FLAG FOR REVIEW': 0,
+      'LEAVE BEHIND': 0,
+      'STALE CONTENT': 0,
+    }
+    for (const g of groups) {
+      const key = groupKey(g)
+      const d = decisions[key]
+      if (d?.client_decision && d.client_decision in c) {
+        c[d.client_decision] = (c[d.client_decision] ?? 0) + 1
+      }
+    }
+    return c
+  }, [groups, decisions])
+
   useEffect(() => {
     if (saved) {
       const raw = saved.client_decision as string
@@ -557,6 +582,57 @@ function GroupReviewPageContent() {
               </Button>
             ))}
           </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (allGroupsReviewed) {
+    const summaryCombined = {
+      MIGRATE: summaryByDecision['MIGRATE'] ?? 0,
+      [ADAPT_OR_FLAG]: (summaryByDecision['ADAPT'] ?? 0) + (summaryByDecision['FLAG FOR REVIEW'] ?? 0),
+      [LEAVE_BEHIND_OR_STALE]: (summaryByDecision['LEAVE BEHIND'] ?? 0) + (summaryByDecision['STALE CONTENT'] ?? 0),
+    }
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <div className="mx-auto max-w-5xl px-4 py-8">
+          <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
+            <h1 className="text-2xl font-bold text-slate-900">Content Migration Analyzer</h1>
+            <div className="flex flex-col items-end">
+              <Button variant="outline" size="sm" onClick={exitSession}>
+                Exit Session
+              </Button>
+              {selectedVersion && (
+                <p className="mt-2 text-sm text-slate-600">
+                  Data version: {selectedVersion}
+                </p>
+              )}
+            </div>
+          </header>
+          <Card className="max-w-2xl">
+            <CardContent className="pt-6">
+              <h2 className="text-xl font-semibold text-slate-900 mb-2">Review complete</h2>
+              <p className="text-slate-600 mb-6">
+                You reviewed all {groups.length} groups. Summary of your decisions:
+              </p>
+              <ul className="space-y-3">
+                {FILTER_OPTIONS.map((rec) => {
+                  const count = summaryCombined[rec] ?? 0
+                  if (count === 0) return null
+                  return (
+                    <li key={rec} className="flex items-center justify-between gap-4">
+                      <span
+                        className={`inline-block rounded px-2 py-1 text-sm font-medium text-white ${FILTER_COLORS[rec]}`}
+                      >
+                        {FILTER_LABELS[rec]}
+                      </span>
+                      <span className="text-slate-600 tabular-nums">{count} {count === 1 ? 'group' : 'groups'}</span>
+                    </li>
+                  )
+                })}
+              </ul>
+            </CardContent>
+          </Card>
         </div>
       </div>
     )
