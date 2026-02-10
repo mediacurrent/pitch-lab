@@ -46,6 +46,28 @@ type RecFilter = 'all' | MigrationRecommendation | typeof ADAPT_OR_FLAG | typeof
 /** Stored decision: always a recommendation. */
 type ClientDecision = MigrationRecommendation
 
+/** Recommendation is in the Flagged for Review category (no "Agree" option). */
+function isFlagForReviewCategory(rec: MigrationRecommendation): boolean {
+  return rec === 'ADAPT' || rec === 'FLAG FOR REVIEW'
+}
+
+/** Decision dropdown option: value (stored) and label. */
+function getDecisionOptions(currentRec: MigrationRecommendation): { value: MigrationRecommendation; label: string }[] {
+  if (isFlagForReviewCategory(currentRec)) {
+    return [
+      { value: 'MIGRATE', label: 'Migrate' },
+      { value: 'LEAVE BEHIND', label: 'Leave Behind' },
+    ]
+  }
+  const options: { value: MigrationRecommendation; label: string }[] = [
+    { value: currentRec, label: 'Agree' },
+  ]
+  if (currentRec !== 'MIGRATE') options.push({ value: 'MIGRATE', label: 'Change to Migrate' })
+  if (currentRec !== 'ADAPT' && currentRec !== 'FLAG FOR REVIEW') options.push({ value: 'FLAG FOR REVIEW', label: 'Change to Flag for Review' })
+  if (currentRec !== 'LEAVE BEHIND' && currentRec !== 'STALE CONTENT') options.push({ value: 'LEAVE BEHIND', label: 'Change to Leave Behind' })
+  return options
+}
+
 const STORAGE_KEY = 'nysid-review-decisions'
 const VERSION_STORAGE_KEY = 'migration-data-version'
 const SESSION_STORAGE_KEY = 'nysid-migration-session'
@@ -436,11 +458,19 @@ function GroupReviewPageContent() {
     if (saved) {
       const raw = saved.client_decision as string
       const fallback = currentGroup?.recommendation ?? 'FLAG FOR REVIEW'
-      setClientDecision(REC_OPTIONS.includes(raw as MigrationRecommendation) ? raw as MigrationRecommendation : fallback)
+      let valid = REC_OPTIONS.includes(raw as MigrationRecommendation) ? raw as MigrationRecommendation : fallback
+      if (currentGroup && isFlagForReviewCategory(currentGroup.recommendation) && (valid === 'ADAPT' || valid === 'FLAG FOR REVIEW')) {
+        valid = 'MIGRATE'
+      }
+      setClientDecision(valid)
       setNotes(saved.notes)
     } else if (currentGroup) {
-      setClientDecision(null)
       setNotes('')
+      if (isFlagForReviewCategory(currentGroup.recommendation)) {
+        setClientDecision('MIGRATE')
+      } else {
+        setClientDecision(null)
+      }
     }
   }, [currentGroup, saved])
 
@@ -887,17 +917,19 @@ function GroupReviewPageContent() {
             <div>
               <label className="mb-1 block text-xs font-medium text-slate-500">Your decision</label>
               <select
-                value={
-                  clientDecision && REC_OPTIONS.includes(clientDecision)
-                    ? clientDecision
-                    : currentGroup.recommendation
-                }
+                value={(() => {
+                  const raw = clientDecision ?? currentGroup.recommendation
+                  if (isFlagForReviewCategory(currentGroup.recommendation) && (raw === 'ADAPT' || raw === 'FLAG FOR REVIEW')) {
+                    return 'MIGRATE'
+                  }
+                  return raw
+                })()}
                 onChange={(e) => setClientDecision(e.target.value as MigrationRecommendation)}
                 className="w-fit min-w-[12rem] rounded-md border border-slate-200 bg-white py-2 pl-3 pr-10 text-sm text-slate-800"
               >
-                {REC_OPTIONS.map((rec) => (
-                  <option key={rec} value={rec}>
-                    {rec === currentGroup.recommendation ? 'Agree' : `Change to ${REC_LABELS[rec]}`}
+                {getDecisionOptions(currentGroup.recommendation).map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
                   </option>
                 ))}
               </select>
