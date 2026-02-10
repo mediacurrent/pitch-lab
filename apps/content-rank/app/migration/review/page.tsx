@@ -165,7 +165,13 @@ function GroupReviewPageContent() {
       }
       sessionLoadedRef.current = true
       fetch(`/api/migration-data?sessionId=${encodeURIComponent(sid)}`)
-        .then((r) => r.json())
+        .then((r) => {
+          const isBadGateway = r.status === 502 || r.status === 503
+          return r.json().then((body: { error?: string; details?: string; decisions?: Record<string, { client_decision: string; notes: string }>; email?: string }) => {
+            if (isBadGateway && body?.error) setSessionError(body.error)
+            return body
+          })
+        })
         .then((body: { decisions?: Record<string, { client_decision: string; notes: string }>; email?: string }) => {
           if (body.email) {
             setEmail(body.email)
@@ -571,6 +577,12 @@ function GroupReviewPageContent() {
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="mx-auto max-w-5xl px-4 py-8">
+        {sessionError && (
+          <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            {sessionError}
+            <span className="ml-2 text-amber-600">(Decisions are saved locally until the session service is available.)</span>
+          </div>
+        )}
         <header className="mb-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
