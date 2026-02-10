@@ -4,11 +4,79 @@ import { NextRequest, NextResponse } from 'next/server'
 
 const PREFIX = 'nysid_migration_analysis_'
 const SUFFIX = '.csv'
+const CMS_URL = process.env.CMS_URL || 'http://localhost:3001'
+const SESSION_SECRET = process.env.MIGRATION_SESSION_API_SECRET
 
 const LIB_DIRS = [
   join(process.cwd(), 'lib'),
   join(process.cwd(), 'apps', 'content-rank', 'lib'),
 ]
+
+function cmsUrl(path: string): string {
+  const base = CMS_URL.replace(/\/$/, '')
+  return `${base}${path.startsWith('/') ? path : `/${path}`}`
+}
+
+/** Proxy migration session GET to CMS */
+async function handleSessionGet(sessionId: string | null, email: string | null): Promise<NextResponse> {
+  if (!SESSION_SECRET) {
+    return NextResponse.json(
+      { error: 'Migration session API not configured (missing MIGRATION_SESSION_API_SECRET)' },
+      { status: 503 }
+    )
+  }
+  if (!sessionId && !email) {
+    return NextResponse.json({ error: 'sessionId or email required' }, { status: 400 })
+  }
+  const params = new URLSearchParams()
+  if (sessionId) params.set('sessionId', sessionId)
+  if (email) params.set('email', email)
+  try {
+    const res = await fetch(cmsUrl(`/api/migration-session?${params}`), {
+      headers: { 'x-migration-session-secret': SESSION_SECRET },
+      cache: 'no-store',
+    })
+    const data = await res.json().catch(() => ({}))
+    return NextResponse.json(data, { status: res.status })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'CMS request failed'
+    console.error('[migration-session GET]', message)
+    return NextResponse.json(
+      { error: 'Cannot reach CMS. Is it running?', details: message },
+      { status: 502 }
+    )
+  }
+}
+
+/** Proxy migration session POST to CMS */
+async function handleSessionPost(body: unknown): Promise<NextResponse> {
+  if (!SESSION_SECRET) {
+    return NextResponse.json(
+      { error: 'Migration session API not configured (missing MIGRATION_SESSION_API_SECRET)' },
+      { status: 503 }
+    )
+  }
+  try {
+    const res = await fetch(cmsUrl('/api/migration-session'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-migration-session-secret': SESSION_SECRET,
+      },
+      body: JSON.stringify(body),
+      cache: 'no-store',
+    })
+    const data = await res.json().catch(() => ({}))
+    return NextResponse.json(data, { status: res.status })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'CMS request failed'
+    console.error('[migration-session POST]', message)
+    return NextResponse.json(
+      { error: 'Cannot reach CMS. Is it running?', details: message },
+      { status: 502 }
+    )
+  }
+}
 
 /** Discover available versions by scanning lib for PREFIX*vSUFFIX files. */
 async function getAvailableVersions(): Promise<string[]> {
@@ -36,6 +104,12 @@ function getPathForVersion(version: string): string[] {
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
+
+  const sessionId = searchParams.get('sessionId')?.trim() || null
+  const email = searchParams.get('email')?.trim() || null
+  if ((sessionId || email) && !searchParams.get('list')) {
+    return handleSessionGet(sessionId, email)
+  }
 
   if (searchParams.get('list') === '1') {
     const versions = await getAvailableVersions()
@@ -72,4 +146,18 @@ export async function GET(request: NextRequest) {
     },
     { status: 404 }
   )
+}
+
+export async function POST(request: NextRequest) {
+  let body: unknown
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+  }
+  const obj = body && typeof body === 'object' ? body as Record<string, unknown> : null
+  if (obj && ('email' in obj || 'sessionId' in obj)) {
+    return handleSessionPost(body)
+  }
+  return NextResponse.json({ error: 'Session payload (email or sessionId) required' }, { status: 400 })
 }

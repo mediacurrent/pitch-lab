@@ -11,6 +11,7 @@ import { FillInTheBlank } from './collections/FillInTheBlank'
 import { QuestionsBank } from './collections/QuestionsBank'
 import { ImageChoiceAssessments } from './collections/ImageChoiceAssessments'
 import { Media } from './collections/Media'
+import { MigrationReviewSession, generateSessionId } from './collections/MigrationReviewSession'
 import { Users } from './collections/Users'
 
 const filename = fileURLToPath(import.meta.url)
@@ -49,13 +50,158 @@ export default buildConfig({
         return Response.json(doc)
       },
     },
+    {
+      path: '/api/migration-session',
+      method: 'get',
+      handler: async (req) => {
+        try {
+          const secret = process.env.MIGRATION_SESSION_API_SECRET
+          if (!secret || req.headers?.get?.('x-migration-session-secret') !== secret) {
+            return Response.json({ error: 'Unauthorized' }, { status: 401 })
+          }
+          const url = new URL(req.url || '', 'http://localhost')
+          const sessionId = url.searchParams.get('sessionId')?.trim()
+          const email = url.searchParams.get('email')?.trim()
+          if (!sessionId && !email) {
+            return Response.json({ error: 'sessionId or email required' }, { status: 400 })
+          }
+          const payload = req.payload
+          if (sessionId) {
+            const result = await payload.find({
+              collection: 'migration-review-sessions',
+              where: { sessionId: { equals: sessionId } },
+              limit: 1,
+              overrideAccess: true,
+            })
+            const doc = result.docs[0]
+            if (!doc) return Response.json({ error: 'Session not found' }, { status: 404 })
+            const d = doc as { email: string; sessionId: string; dataVersion?: string; decisions?: unknown }
+            return Response.json({
+              sessionId: d.sessionId,
+              email: d.email,
+              dataVersion: d.dataVersion ?? null,
+              decisions: d.decisions ?? {},
+            })
+          }
+          const result = await payload.find({
+            collection: 'migration-review-sessions',
+            where: { email: { equals: email } },
+            sort: '-updatedAt',
+            limit: 1,
+            overrideAccess: true,
+          })
+          const doc = result.docs[0]
+          if (!doc) return Response.json({ error: 'Session not found' }, { status: 404 })
+          const d = doc as { email: string; sessionId: string; dataVersion?: string; decisions?: unknown }
+          return Response.json({
+            sessionId: d.sessionId,
+            email: d.email,
+            dataVersion: d.dataVersion ?? null,
+            decisions: d.decisions ?? {},
+          })
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err)
+          console.error('[migration-session GET]', message)
+          return Response.json(
+            { error: 'Migration session fetch failed', details: message },
+            { status: 500 }
+          )
+        }
+      },
+    },
+    {
+      path: '/api/migration-session',
+      method: 'post',
+      handler: async (req) => {
+        try {
+          const secret = process.env.MIGRATION_SESSION_API_SECRET
+          if (!secret || req.headers?.get?.('x-migration-session-secret') !== secret) {
+            return Response.json({ error: 'Unauthorized' }, { status: 401 })
+          }
+          let body: { email?: string; sessionId?: string; dataVersion?: string; decisions?: Record<string, { client_decision: string; notes: string }> } | null = null
+          if (typeof (req as Request).json === 'function') {
+            body = await (req as Request).json()
+          } else if ((req as { body?: unknown }).body) {
+            body = (req as { body: typeof body }).body
+          }
+          if (!body || typeof body !== 'object') {
+            return Response.json({ error: 'Invalid JSON body' }, { status: 400 })
+          }
+          const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : null
+          if (!email) return Response.json({ error: 'email required' }, { status: 400 })
+          const sessionId = typeof body.sessionId === 'string' ? body.sessionId.trim() || null : null
+          const dataVersion = typeof body.dataVersion === 'string' ? body.dataVersion.trim() || null : null
+          const decisions = body.decisions && typeof body.decisions === 'object' ? body.decisions : null
+          const payload = req.payload
+
+          if (sessionId) {
+            const existing = await payload.find({
+              collection: 'migration-review-sessions',
+              where: { sessionId: { equals: sessionId } },
+              limit: 1,
+              overrideAccess: true,
+            })
+            const doc = existing.docs[0]
+            if (doc) {
+              await payload.update({
+                collection: 'migration-review-sessions',
+                id: doc.id,
+                data: {
+                  ...(dataVersion != null && { dataVersion }),
+                  ...(decisions != null && { decisions }),
+                },
+                draft: false,
+                overrideAccess: true,
+              })
+              const d = doc as { sessionId: string; email: string }
+              return Response.json({ sessionId: d.sessionId, email: d.email })
+            }
+          }
+
+          const existingByEmail = await payload.find({
+            collection: 'migration-review-sessions',
+            where: { email: { equals: email } },
+            sort: '-updatedAt',
+            limit: 1,
+            overrideAccess: true,
+          })
+          const existingDoc = existingByEmail.docs[0]
+          if (existingDoc) {
+            await payload.update({
+              collection: 'migration-review-sessions',
+              id: existingDoc.id,
+              data: {
+                ...(dataVersion != null && { dataVersion }),
+                ...(decisions != null && { decisions }),
+              },
+              draft: false,
+              overrideAccess: true,
+            })
+            const d = existingDoc as { sessionId: string; email: string }
+            return Response.json({ sessionId: d.sessionId, email: d.email })
+          }
+
+          const created = await payload.create)
+          const d = created as { sessionId: string; email: string }
+          return Response.json({ sessionId: d.sessionId, email: d.email })
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err)
+          const stack = err instanceof Error ? err.stack : undefined
+          console.error('[migration-session POST]', message, stack)
+          return Response.json(
+            { error: 'Migration session update failed', details: message },
+            { status: 500 }
+          )
+        }
+      },
+    },
   ],
   admin: {
     meta: {
       titleSuffix: ' | Site CMS',
     },
   },
-  collections: [Companies, Users, Media, CsvUploads, ImageChoiceAssessments, ContentRank, QuestionsBank, FillInTheBlank],
+  collections: [Companies, Users, Media, CsvUploads, ImageChoiceAssessments, ContentRank, QuestionsBank, FillInTheBlank, MigrationReviewSession],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || 'change-me-in-production',
   typescript: {

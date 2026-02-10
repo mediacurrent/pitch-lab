@@ -75,6 +75,7 @@ export interface Config {
     'content-rank': ContentRank;
     'questions-bank': QuestionsBank;
     'fill-in-the-blank': FillInTheBlank;
+    'migration-review-sessions': MigrationReviewSession;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -90,6 +91,7 @@ export interface Config {
     'content-rank': ContentRankSelect<false> | ContentRankSelect<true>;
     'questions-bank': QuestionsBankSelect<false> | QuestionsBankSelect<true>;
     'fill-in-the-blank': FillInTheBlankSelect<false> | FillInTheBlankSelect<true>;
+    'migration-review-sessions': MigrationReviewSessionsSelect<false> | MigrationReviewSessionsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -397,6 +399,41 @@ export interface FillInTheBlank {
   createdAt: string;
 }
 /**
+ * Content Migration Analyzer review sessions tied to email
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "migration-review-sessions".
+ */
+export interface MigrationReviewSession {
+  id: string;
+  /**
+   * Email address for this review session
+   */
+  email: string;
+  /**
+   * Unique session ID (used to resume session)
+   */
+  sessionId: string;
+  /**
+   * Migration data version (e.g. FINAL, v2)
+   */
+  dataVersion?: string | null;
+  /**
+   * Saved decisions: groupKey -> { client_decision, notes }
+   */
+  decisions?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -451,6 +488,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'fill-in-the-blank';
         value: string | FillInTheBlank;
+      } | null)
+    | ({
+        relationTo: 'migration-review-sessions';
+        value: string | MigrationReviewSession;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -650,6 +691,18 @@ export interface FillInTheBlankSelect<T extends boolean = true> {
         savedQuestion?: T;
         id?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "migration-review-sessions_select".
+ */
+export interface MigrationReviewSessionsSelect<T extends boolean = true> {
+  email?: T;
+  sessionId?: T;
+  dataVersion?: T;
+  decisions?: T;
   updatedAt?: T;
   createdAt?: T;
 }

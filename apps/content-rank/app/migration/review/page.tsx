@@ -1,6 +1,7 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Button, Card, CardContent } from '@repo/ui'
 import { parseMigrationCSV, pathAfterEdu, formatEngagement, extractYearsFromUrl } from '@/lib/parseMigrationCSV'
 import type { MigrationRow, MigrationRecommendation } from '@/lib/parseMigrationCSV'
@@ -47,6 +48,8 @@ type ClientDecision = MigrationRecommendation
 
 const STORAGE_KEY = 'nysid-review-decisions'
 const VERSION_STORAGE_KEY = 'migration-data-version'
+const SESSION_STORAGE_KEY = 'nysid-migration-session'
+const SESSION_EMAIL_KEY = 'nysid-migration-email'
 
 function loadDecisions(): Record<string, { client_decision: ClientDecision; notes: string }> {
   if (typeof window === 'undefined') return {}
@@ -58,7 +61,19 @@ function loadDecisions(): Record<string, { client_decision: ClientDecision; note
   }
 }
 
-export default function GroupReviewPage() {
+function loadStoredSession(): { sessionId: string; email: string } | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const sessionId = localStorage.getItem(SESSION_STORAGE_KEY)
+    const email = localStorage.getItem(SESSION_EMAIL_KEY)
+    if (sessionId && email) return { sessionId, email }
+    return null
+  } catch {
+    return null
+  }
+}
+
+function GroupReviewPageContent() {
   const [data, setData] = useState<MigrationRow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -75,6 +90,12 @@ export default function GroupReviewPage() {
   const [yearFilter, setYearFilter] = useState<'all' | number>('all')
   const [showMoreExpanded, setShowMoreExpanded] = useState(false)
   const [showMoreCategory, setShowMoreCategory] = useState<string | null>(null)
+  const [email, setEmail] = useState('')
+  const [sessionId, setSessionId] = useState<string | null>(null)
+  const [sessionLoading, setSessionLoading] = useState(false)
+  const [sessionError, setSessionError] = useState<string | null>(null)
+  const [sessionSyncStatus, setSessionSyncStatus] = useState<'idle' | 'syncing' | 'saved' | 'error'>('idle')
+  const [emailInput, setEmailInput] = useState('')
 
   useEffect(() => {
     fetch('/api/migration-data?list=1')
@@ -125,6 +146,118 @@ export default function GroupReviewPage() {
   useEffect(() => {
     setDecisions(loadDecisions())
   }, [])
+
+  const searchParams = useSearchParams()
+  const sessionLoadedRef = useRef(false)
+
+  useEffect(() => {
+    if (sessionLoadedRef.current || typeof window === 'undefined') return
+    const fromUrl = searchParams.get('sessionId')?.trim()
+    const stored = loadStoredSession()
+    const sid = fromUrl || stored?.sessionId
+    const em = stored?.email ?? ''
+    if (em) setEmail(em)
+    if (sid) {
+      setSessionId(sid)
+      if (fromUrl) {
+        localStorage.setItem(SESSION_STORAGE_KEY, sid)
+        if (em) localStorage.setItem(SESSION_EMAIL_KEY, em)
+      }
+      sessionLoadedRef.current = true
+      fetch(`/api/migration-data?sessionId=${encodeURIComponent(sid)}`)
+        .then((r) => r.json())
+        .then((body: { decisions?: Record<string, { client_decision: string; notes: string }>; email?: string }) => {
+          if (body.email) {
+            setEmail(body.email)
+            if (typeof window !== 'undefined') localStorage.setItem(SESSION_EMAIL_KEY, body.email)
+          }
+          if (body.decisions && Object.keys(body.decisions).length > 0) {
+            const merged: Record<string, { client_decision: ClientDecision; notes: string }> = { ...loadDecisions() }
+            for (const [k, v] of Object.entries(body.decisions)) {
+              merged[k] = {
+                client_decision: (REC_OPTIONS.includes(v.client_decision as MigrationRecommendation) ? v.client_decision : 'FLAG FOR REVIEW') as ClientDecision,
+                notes: v.notes ?? '',
+              }
+            }
+            setDecisions(merged)
+            try {
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(merged))
+            } catch {
+              // ignore
+            }
+          }
+        })
+        .catch(() => {})
+    }
+  }, [searchParams])
+
+  const startSession = useCallback(async () => {
+    const em = emailInput.trim().toLowerCase()
+    if (!em) return
+    setSessionLoading(true)
+    setSessionError(null)
+    try {
+      const res = await fetch('/api/migration-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: em }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data?.error || 'Failed to start session')
+      const sid = data.sessionId
+      const gotEmail = data.email ?? em
+      setSessionId(sid)
+      setEmail(gotEmail)
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(SESSION_STORAGE_KEY, sid)
+        localStorage.setItem(SESSION_EMAIL_KEY, gotEmail)
+      }
+    } catch (e) {
+      setSessionError(e instanceof Error ? e.message : 'Failed to start session')
+    } finally {
+      setSessionLoading(false)
+    }
+  }, [emailInput])
+
+  const syncDecisionsToSession = useCallback(
+    async (decisionsPayload: Record<string, { client_decision: ClientDecision; notes: string }>) => {
+      if (!sessionId) return
+      setSessionSyncStatus('syncing')
+      try {
+        const res = await fetch('/api/migration-data', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId,
+            dataVersion: selectedVersion || undefined,
+            decisions: decisionsPayload,
+          }),
+        })
+        if (res.ok) {
+          setSessionSyncStatus('saved')
+          setTimeout(() => setSessionSyncStatus('idle'), 2000)
+        } else {
+          setSessionSyncStatus('error')
+        }
+      } catch {
+        setSessionSyncStatus('error')
+      }
+    },
+    [sessionId, selectedVersion]
+  )
+
+  const syncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => {
+    if (!sessionId || Object.keys(decisions).length === 0) return
+    if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current)
+    syncTimeoutRef.current = setTimeout(() => {
+      syncTimeoutRef.current = null
+      syncDecisionsToSession(decisions)
+    }, 1500)
+    return () => {
+      if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current)
+    }
+  }, [sessionId, decisions, syncDecisionsToSession])
 
   const handleVersionChange = (version: string) => {
     setSelectedVersion(version)
@@ -332,6 +465,45 @@ export default function GroupReviewPage() {
     )
   }
 
+  const hasSessionFromUrl = Boolean(searchParams.get('sessionId')?.trim())
+  if (!sessionId && !hasSessionFromUrl && versions.length > 0) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <Card className="max-w-md w-full">
+          <CardContent className="pt-6">
+            <h1 className="text-xl font-bold text-slate-900 mb-2">Content Migration Analyzer (NYSID)</h1>
+            <p className="text-slate-600 mb-4">
+              Enter your email to start a review session. Your progress will be saved and you can resume on another device.
+            </p>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                startSession()
+              }}
+              className="space-y-3"
+            >
+              <input
+                type="email"
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                placeholder="you@example.com"
+                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-800 placeholder:text-slate-400"
+                required
+                autoComplete="email"
+              />
+              {sessionError && (
+                <p className="text-sm text-red-600">{sessionError}</p>
+              )}
+              <Button type="submit" disabled={sessionLoading}>
+                {sessionLoading ? 'Starting…' : 'Start session'}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   if (!selectedVersion && versions.length > 0) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -403,6 +575,24 @@ export default function GroupReviewPage() {
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold text-slate-900">Content Migration Analyzer (NYSID)</h1>
+              <p className="text-slate-500 text-sm mt-1">
+                {email && <span>Session: {email}</span>}
+                {sessionSyncStatus === 'saved' && <span className="ml-2 text-emerald-600">· Saved</span>}
+                {sessionSyncStatus === 'syncing' && <span className="ml-2 text-slate-400">· Saving…</span>}
+                {sessionSyncStatus === 'error' && <span className="ml-2 text-amber-600">· Save failed (retry by saving another decision)</span>}
+                {sessionId && typeof window !== 'undefined' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const url = `${window.location.origin}${window.location.pathname}?sessionId=${encodeURIComponent(sessionId)}`
+                      navigator.clipboard.writeText(url).then(() => {})
+                    }}
+                    className="ml-2 text-slate-500 hover:text-slate-700 underline"
+                  >
+                    Copy resume link
+                  </button>
+                )}
+              </p>
               <p className="text-slate-600 mt-2">
             Group {currentIndex + 1} of {filteredGroups.length}
             {showMoreCategory
@@ -643,5 +833,17 @@ export default function GroupReviewPage() {
         </>
       </div>
     </div>
+  )
+}
+
+export default function GroupReviewPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <p className="text-slate-500">Loading…</p>
+      </div>
+    }>
+      <GroupReviewPageContent />
+    </Suspense>
   )
 }
