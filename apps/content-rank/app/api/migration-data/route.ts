@@ -31,12 +31,20 @@ async function handleSessionGet(sessionId: string | null, email: string | null):
   const params = new URLSearchParams()
   if (sessionId) params.set('sessionId', sessionId)
   if (email) params.set('email', email)
+  const sessionUrl = cmsUrl(`/api/migration-session?${params}`)
   try {
-    const res = await fetch(cmsUrl(`/api/migration-session?${params}`), {
+    const res = await fetch(sessionUrl, {
       headers: { 'x-migration-session-secret': SESSION_SECRET },
       cache: 'no-store',
     })
     const data = await res.json().catch(() => ({}))
+    if (res.status === 404) {
+      console.error('[migration-session GET] CMS returned 404 for', sessionUrl, '- check CMS_URL')
+      return NextResponse.json(
+        { error: 'Session not found or CMS endpoint missing. Check CMS_URL in production.' },
+        { status: 502 }
+      )
+    }
     return NextResponse.json(data, { status: res.status })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'CMS request failed'
@@ -56,8 +64,9 @@ async function handleSessionPost(body: unknown): Promise<NextResponse> {
       { status: 503 }
     )
   }
+  const sessionUrl = cmsUrl('/api/migration-session')
   try {
-    const res = await fetch(cmsUrl('/api/migration-session'), {
+    const res = await fetch(sessionUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -67,10 +76,20 @@ async function handleSessionPost(body: unknown): Promise<NextResponse> {
       cache: 'no-store',
     })
     const data = await res.json().catch(() => ({}))
+    if (res.status === 404) {
+      console.error('[migration-session POST] CMS returned 404 for', sessionUrl, '- check CMS_URL and that the CMS app is deployed with the migration-session endpoint')
+      return NextResponse.json(
+        {
+          error: 'Session service not found. In production, set CMS_URL to your deployed CMS and ensure the CMS is deployed with the migration-session API.',
+          details: 'CMS returned 404',
+        },
+        { status: 502 }
+      )
+    }
     return NextResponse.json(data, { status: res.status })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'CMS request failed'
-    console.error('[migration-session POST]', message)
+    console.error('[migration-session POST]', sessionUrl, message)
     return NextResponse.json(
       { error: 'Cannot reach CMS. Is it running?', details: message },
       { status: 502 }

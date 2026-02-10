@@ -181,7 +181,17 @@ export default buildConfig({
             return Response.json({ sessionId: d.sessionId, email: d.email })
           }
 
-          const created = await payload.create)
+          const created = await payload.create({
+            collection: 'migration-review-sessions',
+            data: {
+              email,
+              sessionId: generateSessionId(),
+              dataVersion: dataVersion ?? undefined,
+              decisions: decisions ?? undefined,
+            },
+            draft: false,
+            overrideAccess: true,
+          })
           const d = created as { sessionId: string; email: string }
           return Response.json({ sessionId: d.sessionId, email: d.email })
         } catch (err) {
