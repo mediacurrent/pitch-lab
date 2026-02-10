@@ -95,6 +95,7 @@ function GroupReviewPageContent() {
   const [sessionLoading, setSessionLoading] = useState(false)
   const [sessionError, setSessionError] = useState<string | null>(null)
   const [sessionSyncStatus, setSessionSyncStatus] = useState<'idle' | 'syncing' | 'saved' | 'error'>('idle')
+  const [copyResumeStatus, setCopyResumeStatus] = useState<'idle' | 'copied' | 'error'>('idle')
   const [emailInput, setEmailInput] = useState('')
 
   useEffect(() => {
@@ -230,14 +231,16 @@ function GroupReviewPageContent() {
       if (!sessionId) return
       setSessionSyncStatus('syncing')
       try {
+        const body: { sessionId: string; email?: string; dataVersion?: string; decisions: typeof decisionsPayload } = {
+          sessionId,
+          dataVersion: selectedVersion || undefined,
+          decisions: decisionsPayload,
+        }
+        if (email) body.email = email
         const res = await fetch('/api/migration-data', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            sessionId,
-            dataVersion: selectedVersion || undefined,
-            decisions: decisionsPayload,
-          }),
+          body: JSON.stringify(body),
         })
         if (res.ok) {
           setSessionSyncStatus('saved')
@@ -249,12 +252,12 @@ function GroupReviewPageContent() {
         setSessionSyncStatus('error')
       }
     },
-    [sessionId, selectedVersion]
+    [sessionId, email, selectedVersion]
   )
 
   const syncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => {
-    if (!sessionId || Object.keys(decisions).length === 0) return
+    if (!sessionId || !email || Object.keys(decisions).length === 0) return
     if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current)
     syncTimeoutRef.current = setTimeout(() => {
       syncTimeoutRef.current = null
@@ -263,7 +266,7 @@ function GroupReviewPageContent() {
     return () => {
       if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current)
     }
-  }, [sessionId, decisions, syncDecisionsToSession])
+  }, [sessionId, email, decisions, syncDecisionsToSession])
 
   const handleVersionChange = (version: string) => {
     setSelectedVersion(version)
@@ -595,13 +598,33 @@ function GroupReviewPageContent() {
                 {sessionId && typeof window !== 'undefined' && (
                   <button
                     type="button"
-                    onClick={() => {
+                    onClick={async () => {
                       const url = `${window.location.origin}${window.location.pathname}?sessionId=${encodeURIComponent(sessionId)}`
-                      navigator.clipboard.writeText(url).then(() => {})
+                      try {
+                        if (navigator.clipboard?.writeText) {
+                          await navigator.clipboard.writeText(url)
+                        } else {
+                          const input = document.createElement('input')
+                          input.value = url
+                          input.readOnly = true
+                          input.style.position = 'absolute'
+                          input.style.left = '-9999px'
+                          document.body.appendChild(input)
+                          input.select()
+                          document.execCommand('copy')
+                          document.body.removeChild(input)
+                        }
+                        setCopyResumeStatus('copied')
+                        setTimeout(() => setCopyResumeStatus('idle'), 2000)
+                      } catch {
+                        setCopyResumeStatus('error')
+                        setTimeout(() => setCopyResumeStatus('idle'), 2000)
+                      }
                     }}
                     className="ml-2 text-slate-500 hover:text-slate-700 underline"
+                    title="Copy a link to open this session on another device or later"
                   >
-                    Copy resume link
+                    {copyResumeStatus === 'copied' ? 'Copied!' : copyResumeStatus === 'error' ? 'Copy failed' : 'Copy resume link'}
                   </button>
                 )}
               </p>
