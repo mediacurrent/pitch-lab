@@ -18,14 +18,14 @@ import {
 /** Combined filter option for Adapt + Flag for review. */
 const ADAPT_OR_FLAG = 'ADAPT_OR_FLAG' as const
 
-/** Combined filter option for Leave behind + Stale content (filter by year). */
+/** Combined filter option for Leave behind + Stale content. */
 const LEAVE_BEHIND_OR_STALE = 'LEAVE_BEHIND_OR_STALE' as const
 
 const FILTER_OPTIONS = ['MIGRATE', ADAPT_OR_FLAG, LEAVE_BEHIND_OR_STALE] as const
 
 const FILTER_LABELS: Record<string, string> = {
   MIGRATE: 'Migrate',
-  [ADAPT_OR_FLAG]: 'Flag for Review',
+  [ADAPT_OR_FLAG]: 'Flagged for Review',
   [LEAVE_BEHIND_OR_STALE]: 'Leave Behind',
 }
 
@@ -37,8 +37,8 @@ const FILTER_COLORS: Record<string, string> = {
 
 const FILTER_EXPLAINERS: Partial<Record<string, string>> = {
   MIGRATE: 'Move these pages as is',
-  [ADAPT_OR_FLAG]: 'Check rationale and evaluate',
-  [LEAVE_BEHIND_OR_STALE]: 'Do not move · filter by year',
+  [ADAPT_OR_FLAG]: 'Check rationale and determine migration status',
+  [LEAVE_BEHIND_OR_STALE]: 'Do not migrate',
 }
 
 type RecFilter = 'all' | MigrationRecommendation | typeof ADAPT_OR_FLAG | typeof LEAVE_BEHIND_OR_STALE
@@ -268,10 +268,14 @@ function GroupReviewPageContent() {
     }
   }, [sessionId, email, decisions, syncDecisionsToSession])
 
-  const handleVersionChange = (version: string) => {
-    setSelectedVersion(version)
-    if (typeof window !== 'undefined') localStorage.setItem(VERSION_STORAGE_KEY, version)
-  }
+  const exitSession = useCallback(() => {
+    setSessionId(null)
+    setEmail('')
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(SESSION_STORAGE_KEY)
+      localStorage.removeItem(SESSION_EMAIL_KEY)
+    }
+  }, [])
 
   const groups = useMemo(() => groupRows(data), [data])
   const filteredGroups = useMemo(() => {
@@ -480,7 +484,7 @@ function GroupReviewPageContent() {
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
         <Card className="max-w-md w-full">
           <CardContent className="pt-6">
-            <h1 className="text-xl font-bold text-slate-900 mb-2">Content Migration Analyzer (NYSID)</h1>
+            <h1 className="text-xl font-bold text-slate-900 mb-2">Content Migration Analyzer</h1>
             <p className="text-slate-600 mb-4">
               Enter your email to start a review session. Your progress will be saved and you can resume on another device.
             </p>
@@ -525,22 +529,18 @@ function GroupReviewPageContent() {
     return (
       <div className="min-h-screen bg-slate-50">
         <div className="mx-auto max-w-5xl px-4 py-8">
-          <header className="mb-6">
-            <h1 className="text-2xl font-bold text-slate-900">Content Migration Analyzer (NYSID)</h1>
-            {versions.length > 0 && (
-              <label className="mt-2 flex items-center gap-2 text-sm text-slate-600">
-                <span>Data version:</span>
-                <select
-                  value={selectedVersion}
-                  onChange={(e) => handleVersionChange(e.target.value)}
-                  className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-slate-800"
-                >
-                  {versions.map((v) => (
-                    <option key={v} value={v}>{v}</option>
-                  ))}
-                </select>
-              </label>
-            )}
+          <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
+            <h1 className="text-2xl font-bold text-slate-900">Content Migration Analyzer</h1>
+            <div className="flex flex-col items-end">
+              <Button variant="outline" size="sm" onClick={exitSession}>
+                Exit Session
+              </Button>
+              {selectedVersion && (
+                <p className="mt-2 text-sm text-slate-600">
+                  Data version: {selectedVersion}
+                </p>
+              )}
+            </div>
           </header>
           <p className="text-slate-600 mb-4">
             No groups for this recommendation. Choose another filter below.
@@ -589,7 +589,10 @@ function GroupReviewPageContent() {
         <header className="mb-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Content Migration Analyzer (NYSID)</h1>
+              <h1 className="text-2xl font-bold text-slate-900">Content Migration Analyzer</h1>
+              <p className="text-slate-500 text-sm mt-1">
+                Prepared for: New York School of Interior Design
+              </p>
               <p className="text-slate-500 text-sm mt-1">
                 {email && <span>Session: {email}</span>}
                 {sessionSyncStatus === 'saved' && <span className="ml-2 text-emerald-600">· Saved</span>}
@@ -638,20 +641,16 @@ function GroupReviewPageContent() {
             · {Object.keys(decisions).length} saved
               </p>
             </div>
-            {versions.length > 0 && (
-              <label className="flex items-center gap-2 text-sm text-slate-600">
-                <span>Data version:</span>
-                <select
-                  value={selectedVersion}
-                  onChange={(e) => handleVersionChange(e.target.value)}
-                  className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-slate-800"
-                >
-                  {versions.map((v) => (
-                    <option key={v} value={v}>{v}</option>
-                  ))}
-                </select>
-              </label>
-            )}
+            <div className="flex flex-col items-end">
+              <Button variant="outline" size="sm" onClick={exitSession}>
+                Exit Session
+              </Button>
+              {selectedVersion && (
+                <p className="mt-2 text-sm text-slate-600">
+                  Data version: {selectedVersion}
+                </p>
+              )}
+            </div>
           </div>
         </header>
 
